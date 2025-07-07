@@ -1,4 +1,10 @@
-let token = null;
+let token = localStorage.getItem('token');
+
+if (token) {
+    document.getElementById('auth-section').style.display = 'none';
+    document.getElementById('post-section').style.display = 'block';
+    fetchPosts();
+}
 
 document.getElementById('signup-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -15,29 +21,13 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
     alert(data.message || data.error);
 });
 
-document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-    
-    const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
-    
-    const data = await response.json();
-    if (data.token) {
-        token = data.token;
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('post-section').style.display = 'block';
-        fetchPosts();
-    } else {
-        alert(data.error);
-    }
+document.getElementById('logout-button')?.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    token = null;
+    window.location.href = '/login';
 });
 
-document.getElementById('post-form').addEventListener('submit', async (e) => {
+document.getElementById('post-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const content = document.getElementById('post-content').value;
     
@@ -62,6 +52,11 @@ async function fetchPosts() {
     const response = await fetch('/api/posts', {
         headers: { 'Authorization': `Bearer ${token}` }
     });
+    if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return;
+    }
     const posts = await response.json();
     const postsDiv = document.getElementById('posts');
     postsDiv.innerHTML = '';
