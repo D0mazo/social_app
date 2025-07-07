@@ -9,8 +9,8 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-// Database setup
-const db = new sqlite3.Database(':memory:', (err) => {
+// Database setup (persistent storage)
+const db = new sqlite3.Database('./database.db', (err) => {
     if (err) {
         console.error('Database error:', err.message);
     }
@@ -113,6 +113,10 @@ function authenticateToken(req, res, next) {
 // Serve HTML
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.listen(3000, () => {
