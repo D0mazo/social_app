@@ -1,1 +1,8 @@
-node_modules/ .env database.db
+# Ignore environment variables
+.env
+
+# Ignore SQLite database file
+database.db
+
+# Ignore Node.js dependencies
+node_modules/
