@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const app = express();
+require('dotenv').config();
 
 // Middleware
 app.use(express.json());
@@ -34,7 +35,7 @@ db.serialize(() => {
 });
 
 // JWT Secret
-const JWT_SECRET = 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Routes
 app.post('/api/signup', async (req, res) => {
