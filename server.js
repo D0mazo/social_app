@@ -3,8 +3,8 @@ const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-const app = express();
 require('dotenv').config();
+const app = express();
 
 // Middleware
 app.use(express.json());
