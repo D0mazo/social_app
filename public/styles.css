@@ -109,6 +109,28 @@ a:hover {
     text-decoration: underline;
 }
 
+.message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.message.success {
+    background-color: #FFC107;
+    color: #1C2526;
+    opacity: 1;
+}
+
+.message.error {
+    background-color: #D32F2F;
+    color: #E0E0E0;
+    opacity: 1;
+}
+
 /* Responsive Design */
 @media (max-width: 600px) {
     body {
