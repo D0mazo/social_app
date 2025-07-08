@@ -1,4 +1,3 @@
-// ... (other imports and setup remain unchanged)
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
@@ -39,21 +38,28 @@ db.serialize(() => {
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Routes
-app.post('/api/signup', async (req, res) => {
+app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        db.run('INSERT INTO users (username, password) VALUES (?, ?)', 
-            [username, hashedPassword], 
-            function(err) {
-                if (err) {
-                    return res.status(400).json({ error: 'Username already exists' });
-                }
-                res.status(201).json({ message: 'User created successfully' });
-            });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
+    db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
+        if (err) {
+            console.error('Database error:', err); // Debug log
+            return res.status(500).json({ error: 'Server error' });
+        }
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        try {
+            const validPassword = await bcrypt.compare(password, user.password);
+            if (!validPassword) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+            const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+            res.json({ token });
+        } catch (error) {
+            console.error('Login error:', error); // Debug log
+            res.status(500).json({ error: 'Server error' });
+        }
+    });
 });
 
 // ... (other routes remain unchanged)
