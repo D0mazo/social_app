@@ -7,7 +7,14 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="login-section">
+    <nav class="navbar">
+        <h1>Social App</h1>
+        <div class="nav-buttons">
+            <a href="/" class="nav-button">Home</a>
+            <a href="/signup" class="nav-button">Sign Up</a>
+        </div>
+    </nav>
+    <div class="container">
         <h2>Login</h2>
         <div id="login-message" class="message"></div>
         <form id="login-form">
@@ -15,7 +22,7 @@
             <input type="password" id="login-password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
-        <p><a href="/">Don't have an account? Sign up</a></p>
+        <p><a href="/signup">Don't have an account? Sign up</a></p>
     </div>
     <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
