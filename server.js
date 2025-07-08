@@ -59,6 +59,7 @@ app.post('/api/signup', async (req, res) => {
             [username, hashedPassword], 
             function(err) {
                 if (err) {
+                    console.error('Sign-up error:', err);
                     return res.status(400).json({ error: 'Username already exists' });
                 }
                 res.status(201).json({ message: 'User created successfully' });
@@ -162,14 +163,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/signup', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'singup.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'singup.html'));
 });
 
 app.get('/user', (req, res) => {
