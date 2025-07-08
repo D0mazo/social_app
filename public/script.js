@@ -1,179 +1,181 @@
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const path = require('path');
-const multer = require('multer');
-require('dotenv').config();
-const app = express();
+// Token management
+let token = localStorage.getItem('token');
 
-// Middleware
-app.use(express.json());
-app.use(express.static('public'));
+// Redirect if not authenticated on protected route
+if (!token && window.location.pathname === '/user') {
+    window.location.href = '/login';
+}
 
-// Multer setup for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/uploads');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
-
-// Database setup
-const db = new sqlite3.Database('./database.db', (err) => {
-    if (err) {
-        console.error('Database error:', err.message);
-    }
-    console.log('Connected to SQLite database');
-});
-
-// Create tables
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS posts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId INTEGER,
-        type TEXT,
-        content TEXT,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (userId) REFERENCES users(id)
-    )`);
-});
-
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET;
-
-// Routes
-app.post('/api/signup', async (req, res) => {
-    const { username, password } = req.body;
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        db.run('INSERT INTO users (username, password) VALUES (?, ?)', 
-            [username, hashedPassword], 
-            function(err) {
-                if (err) {
-                    console.error('Sign-up error:', err);
-                    return res.status(400).json({ error: 'Username already exists' });
-                }
-                res.status(201).json({ message: 'User created successfully' });
-            });
-    } catch (error) {
-        console.error('Sign-up error:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ error: 'Server error' });
-        }
-        if (!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-        try {
-            const validPassword = await bcrypt.compare(password, user.password);
-            if (!validPassword) {
-                return res.status(401).json({ error: 'Invalid credentials' });
-            }
-            const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
-            res.json({ token });
-        } catch (error) {
-            console.error('Login error:', error);
-            res.status(500).json({ error: 'Server error' });
-        }
-    });
-});
-
-app.post('/api/posts', authenticateToken, upload.single('photo'), async (req, res) => {
-    const { content } = req.body;
-    const userId = req.user.userId;
-    const type = req.file ? 'photo' : 'text';
-    const postContent = req.file ? `/uploads/${req.file.filename}` : content;
-    
-    try {
-        db.run('INSERT INTO posts (userId, type, content) VALUES (?, ?, ?)', 
-            [userId, type, postContent], 
-            function(err) {
-                if (err) {
-                    console.error('Post error:', err);
-                    return res.status(500).json({ error: 'Failed to create post' });
-                }
-                res.status(201).json({ message: 'Post created successfully' });
-            });
-    } catch (error) {
-        console.error('Post error:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-app.get('/api/posts', authenticateToken, (req, res) => {
-    const userId = req.user.userId;
-    db.all('SELECT * FROM posts WHERE userId = ? ORDER BY createdAt DESC', 
-        [userId], 
-        (err, posts) => {
-            if (err) {
-                console.error('Fetch posts error:', err);
-                return res.status(500).json({ error: 'Failed to fetch posts' });
-            }
-            res.json(posts);
-        });
-});
-
-app.get('/api/all-posts', (req, res) => {
-    db.all('SELECT * FROM posts ORDER BY createdAt DESC', 
-        [], 
-        (err, posts) => {
-            if (err) {
-                console.error('Fetch all posts error:', err);
-                return res.status(500).json({ error: 'Failed to fetch posts' });
-            }
-            res.json(posts);
-        });
-});
-
-// Middleware to authenticate JWT
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) {
-        return res.status(401).json({ error: 'Access denied' });
-    }
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ error: 'Invalid token' });
-        }
-        req.user = user;
-        next();
+// Logout
+const logoutButton = document.getElementById('logout-button');
+if (logoutButton) {
+    logoutButton.addEventListener('click', () => {
+        console.log('Logout clicked');
+        localStorage.removeItem('token');
+        window.location.href = '/login';
     });
 }
 
-// Serve HTML
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'home.html'));
-});
+// Login
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+        const messageDiv = document.getElementById('login-message');
 
-app.get('/signup', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'signup.html'));
-});
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
 
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
+            const data = await response.json();
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                messageDiv.textContent = 'Login successful! Redirecting...';
+                messageDiv.classList.add('success');
+                setTimeout(() => {
+                    window.location.href = '/user';
+                }, 2000);
+            } else {
+                messageDiv.textContent = data.error || 'Login failed';
+                messageDiv.classList.add('error');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            messageDiv.textContent = 'Error: Unable to connect to server';
+            messageDiv.classList.add('error');
+        }
 
-app.get('/user', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'user.html'));
-});
+        setTimeout(() => {
+            messageDiv.textContent = '';
+            messageDiv.classList.remove('error', 'success');
+        }, 3000);
+    });
+}
 
-app.listen(3000, () => {
-    console.log('Server running on port 3000');
+// Post submission
+const postForm = document.getElementById('post-form');
+if (postForm) {
+    postForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const content = document.getElementById('post-content').value;
+        const photo = document.getElementById('post-photo').files[0];
+        const messageDiv = document.getElementById('post-message');
+        const formData = new FormData();
+
+        if (content) formData.append('content', content);
+        if (photo) formData.append('photo', photo);
+
+        try {
+            const response = await fetch('/api/posts', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                messageDiv.textContent = data.message || 'Post created successfully';
+                messageDiv.classList.add('success');
+                postForm.reset();
+                fetchPosts();
+            } else {
+                messageDiv.textContent = data.error || 'Failed to create post';
+                messageDiv.classList.add('error');
+            }
+        } catch (error) {
+            console.error('Post error:', error);
+            messageDiv.textContent = 'Error: Unable to connect to server';
+            messageDiv.classList.add('error');
+        }
+
+        setTimeout(() => {
+            messageDiv.textContent = '';
+            messageDiv.classList.remove('success', 'error');
+        }, 3000);
+    });
+}
+
+// Fetch user's posts
+async function fetchPosts() {
+    try {
+        const response = await fetch('/api/posts', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return;
+        }
+
+        const posts = await response.json();
+        const postsDiv = document.getElementById('posts');
+        postsDiv.innerHTML = '';
+
+        if (posts.length === 0) {
+            postsDiv.innerHTML = '<p>No posts yet. Share something!</p>';
+        } else {
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                postElement.innerHTML = post.type === 'photo'
+                    ? `<img src="${post.content}" alt="User post" class="post-image">
+                       <small>Posted on ${new Date(post.createdAt).toLocaleString()}</small>`
+                    : `<p>${post.content}</p>
+                       <small>Posted on ${new Date(post.createdAt).toLocaleString()}</small>`;
+                postsDiv.appendChild(postElement);
+            });
+        }
+    } catch (error) {
+        console.error('Fetch posts error:', error);
+        const messageDiv = document.getElementById('post-message');
+        if (messageDiv) {
+            messageDiv.textContent = 'Error: Unable to fetch posts';
+            messageDiv.classList.add('error');
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.classList.remove('error');
+            }, 3000);
+        }
+    }
+}
+
+// Fetch all public posts
+async function fetchAllPosts() {
+    try {
+        const response = await fetch('/api/all-posts');
+        const posts = await response.json();
+        const postsDiv = document.getElementById('all-posts');
+        postsDiv.innerHTML = '';
+
+        if (posts.length === 0) {
+            postsDiv.innerHTML = '<p>No posts yet. Be the first to share!</p>';
+        } else {
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                postElement.innerHTML = post.type === 'photo'
+                    ? `<img src="${post.content}" alt="User post" class="post-image">
+                       <small>Posted by User ${post.userId} on ${new Date(post.createdAt).toLocaleString()}</small>`
+                    : `<p>${post.content}</p>
+                       <small>Posted by User ${post.userId} on ${new Date(post.createdAt).toLocaleString()}</small>`;
+                postsDiv.appendChild(postElement);
+            });
+        }
+    } catch (error) {
+        console.error('Fetch all posts error:', error);
+        const postsDiv = document.getElementById('all-posts');
+        postsDiv.innerHTML = '<p class="error">Error: Unable to fetch posts</p>';
+    }
+}
+
+// On page load
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('posts')) fetchPosts();
+    if (document.getElementById('all-posts')) fetchAllPosts();
 });
