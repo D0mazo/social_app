@@ -3,11 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social App</title>
+    <title>Sign Up - Social App</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="auth-section">
+    <nav class="navbar">
+        <h1>Social App</h1>
+        <div class="nav-buttons">
+            <a href="/" class="nav-button">Home</a>
+            <a href="/login" class="nav-button">Login</a>
+        </div>
+    </nav>
+    <div class="container">
         <h2>Sign Up</h2>
         <div id="signup-message" class="message"></div>
         <form id="signup-form">
@@ -16,17 +23,6 @@
             <button type="submit">Sign Up</button>
         </form>
         <p><a href="/login">Already have an account? Log in</a></p>
-    </div>
-    <div id="post-section" style="display: none;">
-        <button id="logout-button">Log Out</button>
-        <h2>Create Post</h2>
-        <div id="post-message" class="message"></div>
-        <form id="post-form">
-            <textarea id="post-content" placeholder="What's on your mind?" required></textarea>
-            <button type="submit">Post</button>
-        </form>
-        <h2>Your Posts</h2>
-        <div id="posts"></div>
     </div>
     <script src="script.js"></script>
 </body>
