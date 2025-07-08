@@ -21,22 +21,31 @@
     </div>
     <script>
         async function fetchAllPosts() {
-            const response = await fetch('/api/all-posts');
-            const posts = await response.json();
-            const postsDiv = document.getElementById('all-posts');
-            postsDiv.innerHTML = '';
-            if (posts.length === 0) {
-                postsDiv.innerHTML = '<p>No posts yet. Be the first to share!</p>';
-            } else {
-                posts.forEach(post => {
-                    const postElement = document.createElement('div');
-                    postElement.className = 'post';
-                    postElement.innerHTML = `
-                        <p>${post.content}</p>
-                        <small>Posted by User ${post.userId} on ${new Date(post.createdAt).toLocaleString()}</small>
-                    `;
-                    postsDiv.appendChild(postElement);
-                });
+            try {
+                const response = await fetch('/api/all-posts');
+                console.log('Fetch all posts response status:', response.status);
+                const posts = await response.json();
+                console.log('Fetch all posts data:', posts);
+                const postsDiv = document.getElementById('all-posts');
+                postsDiv.innerHTML = '';
+                if (posts.length === 0) {
+                    postsDiv.innerHTML = '<p>No posts yet. Be the first to share!</p>';
+                } else {
+                    posts.forEach(post => {
+                        const postElement = document.createElement('div');
+                        postElement.className = 'post';
+                        postElement.innerHTML = post.type === 'photo' 
+                            ? `<img src="${post.content}" alt="User post" class="post-image">
+                               <small>Posted by User ${post.userId} on ${new Date(post.createdAt).toLocaleString()}</small>`
+                            : `<p>${post.content}</p>
+                               <small>Posted by User ${post.userId} on ${new Date(post.createdAt).toLocaleString()}</small>`;
+                        postsDiv.appendChild(postElement);
+                    });
+                }
+            } catch (error) {
+                console.error('Fetch all posts error:', error);
+                const postsDiv = document.getElementById('all-posts');
+                postsDiv.innerHTML = '<p class="error">Error: Unable to fetch posts</p>';
             }
         }
 

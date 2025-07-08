@@ -1,16 +1,17 @@
 {
-         "name": "social-app",
-         "version": "1.0.0",
-         "description": "Simple social media app with authentication and posts",
-         "main": "server.js",
-         "scripts": {
-                  "start": "node server.js"
-         },
-         "dependencies": {
-                  "bcrypt": "^5.0.1",
-                  "dotenv": "^16.0.0",
-                  "express": "^4.17.1",
-                  "jsonwebtoken": "^9.0.2",
-                  "sqlite3": "^5.0.2"
-         }
+    "name": "social-app",
+    "version": "1.0.0",
+    "description": "Simple social media app with authentication and posts",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "sqlite3": "^5.0.2",
+        "bcrypt": "^5.0.1",
+        "jsonwebtoken": "^8.5.1",
+        "dotenv": "^16.0.0",
+        "multer": "^1.4.5-lts.1"
+    }
 }
