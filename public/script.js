@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function isAdminUser() {
         if (!token) return false;
         try {
-            // Decode JWT token (assumes standard JWT format)
             const payload = JSON.parse(atob(token.split('.')[1]));
             return payload.isAdmin || false;
         } catch (err) {
@@ -121,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (photo) formData.append('photo', photo);
 
             try {
-                const token = localStorage.getItem('token');
                 const res = await fetch('/api/posts', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
@@ -151,6 +149,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Fetch comments for a post ---
+    async function fetchComments(postId) {
+        try {
+            const res = await fetch(`/api/posts/${postId}/comments`);
+            if (!res.ok) throw new Error('Failed to fetch comments');
+            return await res.json();
+        } catch (err) {
+            console.error('Fetch comments error:', err);
+            return [];
+        }
+    }
+
     // --- Fetch user posts ---
     async function fetchPosts() {
         try {
@@ -172,15 +182,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            posts.forEach(p => {
+            for (const p of posts) {
+                const comments = await fetchComments(p.id);
                 const div = document.createElement('div');
                 div.className = 'post';
-                div.dataset.postId = p.id; // Store post ID for delete/update
+                div.dataset.postId = p.id;
                 let postContent = p.type === 'photo'
                     ? `<img src="${p.content}" class="post-image"><small>Posted on ${new Date(p.createdAt).toLocaleString()}</small>`
                     : `<p>${p.content}</p><small>Posted on ${new Date(p.createdAt).toLocaleString()}</small>`;
 
-                // Add admin controls if user is admin
+                // Add comment form for logged-in users
+                if (token) {
+                    postContent += `
+                        <form class="comment-form" data-post-id="${p.id}">
+                            <textarea class="comment-content" placeholder="Add a comment..." rows="2"></textarea>
+                            <button type="submit" class="submit-comment">Comment</button>
+                        </form>`;
+                }
+
+                // Add comments section
+                postContent += `<div class="comments">`;
+                if (comments.length === 0) {
+                    postContent += `<p class="no-comments">No comments yet.</p>`;
+                } else {
+                    postContent += comments.map(c => `
+                        <div class="comment" data-comment-id="${c.id}">
+                            <p>${c.content}</p>
+                            <small>By ${c.username} on ${new Date(c.createdAt).toLocaleString()}</small>
+                            ${isAdmin ? `<button class="delete-comment" data-comment-id="${c.id}">Delete Comment</button>` : ''}
+                        </div>
+                    `).join('');
+                }
+                postContent += `</div>`;
+
+                // Add admin controls
                 if (isAdmin) {
                     postContent += `
                         <div class="admin-controls">
@@ -196,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 div.innerHTML = postContent;
                 container.appendChild(div);
-            });
+            }
 
             // Add event listeners for admin controls
             if (isAdmin) {
@@ -259,7 +294,65 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 });
+
+                // Add event listeners for comment deletion
+                document.querySelectorAll('.delete-comment').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const commentId = btn.dataset.commentId;
+                        try {
+                            const res = await fetch(`/api/comments/${commentId}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` },
+                            });
+                            if (res.ok) {
+                                alert('Comment deleted successfully');
+                                fetchPosts();
+                            } else {
+                                const data = await res.json();
+                                alert(data.error || 'Failed to delete comment');
+                            }
+                        } catch (err) {
+                            console.error('Delete comment error:', err);
+                            alert('Error: Cannot reach server');
+                        }
+                    });
+                });
             }
+
+            // Add event listeners for comment submission
+            document.querySelectorAll('.comment-form').forEach(form => {
+                form.addEventListener('submit', async e => {
+                    e.preventDefault();
+                    const postId = form.dataset.postId;
+                    const content = form.querySelector('.comment-content').value;
+                    if (!content) {
+                        alert('Comment cannot be empty');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ postId, content }),
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            alert('Comment added successfully');
+                            form.reset();
+                            fetchPosts();
+                        } else {
+                            alert(data.error || 'Failed to add comment');
+                        }
+                    } catch (err) {
+                        console.error('Comment error:', err);
+                        alert('Error: Cannot reach server');
+                    }
+                });
+            });
         } catch (err) {
             console.error('Fetch posts error:', err);
         }
@@ -279,15 +372,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            posts.forEach(p => {
+            for (const p of posts) {
+                const comments = await fetchComments(p.id);
                 const div = document.createElement('div');
                 div.className = 'post';
-                div.dataset.postId = p.id; // Store post ID for delete/update
+                div.dataset.postId = p.id;
                 let postContent = p.type === 'photo'
                     ? `<img src="${p.content}" class="post-image"><small>By User ${p.userId} on ${new Date(p.createdAt).toLocaleString()}</small>`
                     : `<p>${p.content}</p><small>By User ${p.userId} on ${new Date(p.createdAt).toLocaleString()}</small>`;
 
-                // Add admin controls if user is admin
+                // Add comment form for logged-in users
+                if (token) {
+                    postContent += `
+                        <form class="comment-form" data-post-id="${p.id}">
+                            <textarea class="comment-content" placeholder="Add a comment..." rows="2"></textarea>
+                            <button type="submit" class="submit-comment">Comment</button>
+                        </form>`;
+                }
+
+                // Add comments section
+                postContent += `<div class="comments">`;
+                if (comments.length === 0) {
+                    postContent += `<p class="no-comments">No comments yet.</p>`;
+                } else {
+                    postContent += comments.map(c => `
+                        <div class="comment" data-comment-id="${c.id}">
+                            <p>${c.content}</p>
+                            <small>By ${c.username} on ${new Date(c.createdAt).toLocaleString()}</small>
+                            ${isAdmin ? `<button class="delete-comment" data-comment-id="${c.id}">Delete Comment</button>` : ''}
+                        </div>
+                    `).join('');
+                }
+                postContent += `</div>`;
+
+                // Add admin controls
                 if (isAdmin) {
                     postContent += `
                         <div class="admin-controls">
@@ -303,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 div.innerHTML = postContent;
                 container.appendChild(div);
-            });
+            }
 
             // Add event listeners for admin controls
             if (isAdmin) {
@@ -366,7 +484,65 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 });
+
+                // Add event listeners for comment deletion
+                document.querySelectorAll('.delete-comment').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const commentId = btn.dataset.commentId;
+                        try {
+                            const res = await fetch(`/api/comments/${commentId}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` },
+                            });
+                            if (res.ok) {
+                                alert('Comment deleted successfully');
+                                fetchAllPosts();
+                            } else {
+                                const data = await res.json();
+                                alert(data.error || 'Failed to delete comment');
+                            }
+                        } catch (err) {
+                            console.error('Delete comment error:', err);
+                            alert('Error: Cannot reach server');
+                        }
+                    });
+                });
             }
+
+            // Add event listeners for comment submission
+            document.querySelectorAll('.comment-form').forEach(form => {
+                form.addEventListener('submit', async e => {
+                    e.preventDefault();
+                    const postId = form.dataset.postId;
+                    const content = form.querySelector('.comment-content').value;
+                    if (!content) {
+                        alert('Comment cannot be empty');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ postId, content }),
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            alert('Comment added successfully');
+                            form.reset();
+                            fetchAllPosts();
+                        } else {
+                            alert(data.error || 'Failed to add comment');
+                        }
+                    } catch (err) {
+                        console.error('Comment error:', err);
+                        alert('Error: Cannot reach server');
+                    }
+                });
+            });
         } catch (err) {
             console.error('Fetch all posts error:', err);
         }
