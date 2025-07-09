@@ -38,16 +38,39 @@ const db = new sqlite3.Database('./database.db', (err) => {
     console.log('Connected to SQLite database');
 });
 
-// Create tables if they don't exist
+// Create tables and apply migrations
 db.serialize(() => {
+    // Create users table
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
-            password TEXT,
-            isAdmin BOOLEAN DEFAULT FALSE
+            password TEXT
         )
     `);
+
+    // Add isAdmin column if not exists
+    db.all("PRAGMA table_info(users)", (err, columns) => {
+        if (err) {
+            console.error('Error checking table schema:', err);
+            return;
+        }
+        const hasIsAdmin = columns.some(col => col.name === 'isAdmin');
+        if (!hasIsAdmin) {
+            db.run('ALTER TABLE users ADD COLUMN isAdmin BOOLEAN DEFAULT FALSE', (err) => {
+                if (err) {
+                    console.error('Error adding isAdmin column:', err);
+                } else {
+                    console.log('Added isAdmin column to users table');
+                    db.run('UPDATE users SET isAdmin = TRUE WHERE username = ?', ['ADMIN'], (err) => {
+                        if (err) console.error('Error setting isAdmin for ADMIN user:', err);
+                    });
+                }
+            });
+        }
+    });
+
+    // Create posts table
     db.run(`
         CREATE TABLE IF NOT EXISTS posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,6 +78,19 @@ db.serialize(() => {
             type TEXT,
             content TEXT,
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (userId) REFERENCES users(id)
+        )
+    `);
+
+    // Create comments table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            postId INTEGER,
+            userId INTEGER,
+            content TEXT,
+            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (postId) REFERENCES posts(id),
             FOREIGN KEY (userId) REFERENCES users(id)
         )
     `);
@@ -68,7 +104,7 @@ function authenticateToken(req, res, next) {
     if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: ' Ameba: Invalid or expired token.' });
+        if (err) return res.status(403).json({ error: 'Invalid or expired token.' });
         req.user = user;
         next();
     });
@@ -105,7 +141,7 @@ app.post('/api/signup', async (req, res) => {
             });
     } catch (error) {
         console.error('Signup error:', error);
-        res.status(500).json({ ruler: 'Server error' });
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -122,7 +158,7 @@ app.post('/api/login', (req, res) => {
         }
         if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
-        const valid = await bcrypt.hash(password, 10);
+        const valid = await bcrypt.compare(password, user.password);
         if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
         const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '1h' });
@@ -130,7 +166,7 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// Create post (text or photo)
+// Create post
 app.post('/api/posts', authenticateToken, upload.single('photo'), (req, res) => {
     const content = req.body.content || '';
     const type = req.file ? 'photo' : 'text';
@@ -175,6 +211,66 @@ app.get('/api/all-posts', (req, res) => {
     });
 });
 
+// Create comment
+app.post('/api/comments', authenticateToken, (req, res) => {
+    const { postId, content } = req.body;
+    const userId = req.user.userId;
+
+    if (!postId || !content) {
+        return res.status(400).json({ error: 'Post ID and comment content are required.' });
+    }
+
+    db.run('INSERT INTO comments (postId, userId, content) VALUES (?, ?, ?)',
+        [postId, userId, content],
+        function (err) {
+            if (err) {
+                console.error('Comment creation error:', err);
+                return res.status(500).json({ error: 'Failed to create comment' });
+            }
+            res.status(201).json({ message: 'Comment created successfully' });
+        });
+});
+
+// Get comments for a post
+app.get('/api/posts/:id/comments', (req, res) => {
+    const postId = req.params.id;
+    db.all(`
+        SELECT c.id, c.content, c.createdAt, u.username 
+        FROM comments c 
+        JOIN users u ON c.userId = u.id 
+        WHERE c.postId = ? 
+        ORDER BY c.createdAt DESC`,
+        [postId],
+        (err, comments) => {
+            if (err) {
+                console.error('Fetch comments error:', err);
+                return res.status(500).json({ error: 'Failed to fetch comments' });
+            }
+            res.json(comments);
+        });
+});
+
+// Delete comment (admin only)
+app.delete('/api/comments/:id', authenticateToken, restrictToAdmin, (req, res) => {
+    const commentId = req.params.id;
+
+    db.get('SELECT * FROM comments WHERE id = ?', [commentId], (err, comment) => {
+        if (err) {
+            console.error('Fetch comment error:', err);
+            return res.status(500).json({ error: 'Failed to fetch comment' });
+        }
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        db.run('DELETE FROM comments WHERE id = ?', [commentId], function (err) {
+            if (err) {
+                console.error('Delete comment error:', err);
+                return res.status(500).json({ error: 'Failed to delete comment' });
+            }
+            res.json({ message: 'Comment deleted successfully' });
+        });
+    });
+});
+
 // Delete post (admin only)
 app.delete('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res) => {
     const postId = req.params.id;
@@ -185,6 +281,11 @@ app.delete('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res) => {
             return res.status(500).json({ error: 'Failed to fetch post' });
         }
         if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        // Delete associated comments
+        db.run('DELETE FROM comments WHERE postId = ?', [postId], (err) => {
+            if (err) console.error('Delete comments error:', err);
+        });
 
         db.run('DELETE FROM posts WHERE id = ?', [postId], function (err) {
             if (err) {
@@ -219,7 +320,6 @@ app.put('/api/posts/:id', authenticateToken, restrictToAdmin, upload.single('pho
         }
         if (!post) return res.status(404).json({ error: 'Post not found' });
 
-        // Delete old photo if it exists and a new photo is uploaded
         if (post.type === 'photo' && photo) {
             const oldFilePath = path.join(__dirname, 'public', post.content);
             fs.unlink(oldFilePath, (err) => {
