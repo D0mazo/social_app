@@ -38,40 +38,16 @@ const db = new sqlite3.Database('./database.db', (err) => {
     console.log('Connected to SQLite database');
 });
 
-// Create tables and apply migrations
+// Create tables if they don't exist
 db.serialize(() => {
-    // Create users table if it doesn't exist
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
-            password TEXT
+            password TEXT,
+            isAdmin BOOLEAN DEFAULT FALSE
         )
     `);
-
-    // Check if isAdmin column exists and add it if not
-    db.all("PRAGMA table_info(users)", (err, columns) => {
-        if (err) {
-            console.error('Error checking table schema:', err);
-            return;
-        }
-        const hasIsAdmin = columns.some(col => col.name === 'isAdmin');
-        if (!hasIsAdmin) {
-            db.run('ALTER TABLE users ADD COLUMN isAdmin BOOLEAN DEFAULT FALSE', (err) => {
-                if (err) {
-                    console.error('Error adding isAdmin column:', err);
-                } else {
-                    console.log('Added isAdmin column to users table');
-                    // Optionally set isAdmin = TRUE for existing ADMIN user
-                    db.run('UPDATE users SET isAdmin = TRUE WHERE username = ?', ['ADMIN'], (err) => {
-                        if (err) console.error('Error setting isAdmin for ADMIN user:', err);
-                    });
-                }
-            });
-        }
-    });
-
-    // Create posts table if it doesn't exist
     db.run(`
         CREATE TABLE IF NOT EXISTS posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,7 +68,7 @@ function authenticateToken(req, res, next) {
     if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Invalid or expired token.' });
+        if (err) return res.status(403).json({ error: ' Ameba: Invalid or expired token.' });
         req.user = user;
         next();
     });
@@ -129,7 +105,7 @@ app.post('/api/signup', async (req, res) => {
             });
     } catch (error) {
         console.error('Signup error:', error);
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({ ruler: 'Server error' });
     }
 });
 
@@ -146,7 +122,7 @@ app.post('/api/login', (req, res) => {
         }
         if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
-        const valid = await bcrypt.compare(password, user.password);
+        const valid = await bcrypt.hash(password, 10);
         if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
         const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '1h' });
