@@ -38,8 +38,9 @@ const db = new sqlite3.Database('./database.db', (err) => {
     console.log('Connected to SQLite database');
 });
 
-// Create tables if they don't exist
+// Create tables and apply migrations
 db.serialize(() => {
+    // Create users table if it doesn't exist
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,6 +48,30 @@ db.serialize(() => {
             password TEXT
         )
     `);
+
+    // Check if isAdmin column exists and add it if not
+    db.all("PRAGMA table_info(users)", (err, columns) => {
+        if (err) {
+            console.error('Error checking table schema:', err);
+            return;
+        }
+        const hasIsAdmin = columns.some(col => col.name === 'isAdmin');
+        if (!hasIsAdmin) {
+            db.run('ALTER TABLE users ADD COLUMN isAdmin BOOLEAN DEFAULT FALSE', (err) => {
+                if (err) {
+                    console.error('Error adding isAdmin column:', err);
+                } else {
+                    console.log('Added isAdmin column to users table');
+                    // Optionally set isAdmin = TRUE for existing ADMIN user
+                    db.run('UPDATE users SET isAdmin = TRUE WHERE username = ?', ['ADMIN'], (err) => {
+                        if (err) console.error('Error setting isAdmin for ADMIN user:', err);
+                    });
+                }
+            });
+        }
+    });
+
+    // Create posts table if it doesn't exist
     db.run(`
         CREATE TABLE IF NOT EXISTS posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,6 +98,14 @@ function authenticateToken(req, res, next) {
     });
 }
 
+// Admin Restriction Middleware
+function restrictToAdmin(req, res, next) {
+    if (!req.user.isAdmin) {
+        return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+    }
+    next();
+}
+
 // Signup route
 app.post('/api/signup', async (req, res) => {
     const { username, password } = req.body;
@@ -81,8 +114,9 @@ app.post('/api/signup', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        db.run('INSERT INTO users (username, password) VALUES (?, ?)',
-            [username, hashedPassword],
+        const isAdmin = username === 'ADMIN' && password === 'ADMIN';
+        db.run('INSERT INTO users (username, password, isAdmin) VALUES (?, ?, ?)',
+            [username, hashedPassword, isAdmin],
             function (err) {
                 if (err) {
                     if (err.message.includes('UNIQUE')) {
@@ -115,7 +149,7 @@ app.post('/api/login', (req, res) => {
         const valid = await bcrypt.compare(password, user.password);
         if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '1h' });
         res.json({ token });
     });
 });
@@ -162,6 +196,70 @@ app.get('/api/all-posts', (req, res) => {
             return res.status(500).json({ error: 'Failed to fetch posts' });
         }
         res.json(posts);
+    });
+});
+
+// Delete post (admin only)
+app.delete('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res) => {
+    const postId = req.params.id;
+
+    db.get('SELECT * FROM posts WHERE id = ?', [postId], (err, post) => {
+        if (err) {
+            console.error('Fetch post error:', err);
+            return res.status(500).json({ error: 'Failed to fetch post' });
+        }
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        db.run('DELETE FROM posts WHERE id = ?', [postId], function (err) {
+            if (err) {
+                console.error('Delete post error:', err);
+                return res.status(500).json({ error: 'Failed to delete post' });
+            }
+            if (post.type === 'photo') {
+                const filePath = path.join(__dirname, 'public', post.content);
+                fs.unlink(filePath, (err) => {
+                    if (err) console.error('Failed to delete photo file:', err);
+                });
+            }
+            res.json({ message: 'Post deleted successfully' });
+        });
+    });
+});
+
+// Update post (admin only)
+app.put('/api/posts/:id', authenticateToken, restrictToAdmin, upload.single('photo'), (req, res) => {
+    const postId = req.params.id;
+    const content = req.body.content || '';
+    const photo = req.file;
+    let type = content && !photo ? 'text' : photo ? 'photo' : null;
+    let postContent = photo ? `/uploads/${photo.filename}` : content;
+
+    if (!type) return res.status(400).json({ error: 'No content or photo provided' });
+
+    db.get('SELECT * FROM posts WHERE id = ?', [postId], (err, post) => {
+        if (err) {
+            console.error('Fetch post error:', err);
+            return res.status(500).json({ error: 'Failed to fetch post' });
+        }
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        // Delete old photo if it exists and a new photo is uploaded
+        if (post.type === 'photo' && photo) {
+            const oldFilePath = path.join(__dirname, 'public', post.content);
+            fs.unlink(oldFilePath, (err) => {
+                if (err) console.error('Failed to delete old photo file:', err);
+            });
+        }
+
+        db.run('UPDATE posts SET type = ?, content = ? WHERE id = ?',
+            [type, postContent, postId],
+            function (err) {
+                if (err) {
+                    console.error('Update post error:', err);
+                    return res.status(500).json({ error: 'Failed to update post' });
+                }
+                res.json({ message: 'Post updated successfully' });
+            });
     });
 });
 
