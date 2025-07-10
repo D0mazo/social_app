@@ -169,8 +169,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/posts', { headers: { 'Authorization': `Bearer ${token}` } });
             if (res.status === 401 || res.status === 403) {
                 localStorage.removeItem('token');
-                alert('Session expired. Please log in again.');
-                window.location.href = '/login';
+                msg.textContent = 'Session expired. Please log in again.';
+                msg.classList.add('error');
+                setTimeout(() => window.location.href = '/login', 2000);
                 return;
             }
             const posts = await res.json();
@@ -238,22 +239,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.delete-button').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const postId = btn.dataset.postId;
+                        const msg = document.getElementById('post-message');
                         try {
                             const res = await fetch(`/api/posts/${postId}`, {
                                 method: 'DELETE',
                                 headers: { 'Authorization': `Bearer ${token}` },
                             });
                             if (res.ok) {
-                                alert('Post deleted successfully');
+                                msg.textContent = 'Post deleted successfully';
+                                msg.classList.add('success');
                                 fetchPosts();
                             } else {
                                 const data = await res.json();
-                                alert(data.error || 'Failed to delete post');
+                                msg.textContent = data.error || 'Failed to delete post';
+                                msg.classList.add('error');
                             }
                         } catch (err) {
                             console.error('Delete error:', err);
-                            alert('Error: Cannot reach server');
+                            msg.textContent = 'Error: Cannot reach server';
+                            msg.classList.add('error');
                         }
+                        setTimeout(() => {
+                            msg.textContent = '';
+                            msg.classList.remove('error', 'success');
+                        }, 3000);
                     });
                 });
 
@@ -271,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const updateContent = btn.parentElement.querySelector('.update-content').value;
                         const updatePhoto = btn.parentElement.querySelector('.update-photo').files[0];
                         const formData = new FormData();
+                        const msg = document.getElementById('post-message');
 
                         if (updateContent) formData.append('content', updateContent);
                         if (updatePhoto) formData.append('photo', updatePhoto);
@@ -283,15 +293,22 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                             const data = await res.json();
                             if (res.ok) {
-                                alert('Post updated successfully');
+                                msg.textContent = 'Post updated successfully';
+                                msg.classList.add('success');
                                 fetchPosts();
                             } else {
-                                alert(data.error || 'Failed to update post');
+                                msg.textContent = data.error || 'Failed to update post';
+                                msg.classList.add('error');
                             }
                         } catch (err) {
                             console.error('Update error:', err);
-                            alert('Error: Cannot reach server');
+                            msg.textContent = 'Error: Cannot reach server';
+                            msg.classList.add('error');
                         }
+                        setTimeout(() => {
+                            msg.textContent = '';
+                            msg.classList.remove('error', 'success');
+                        }, 3000);
                     });
                 });
 
@@ -299,22 +316,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.delete-comment').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const commentId = btn.dataset.commentId;
+                        const msg = document.getElementById('post-message');
                         try {
                             const res = await fetch(`/api/comments/${commentId}`, {
                                 method: 'DELETE',
                                 headers: { 'Authorization': `Bearer ${token}` },
                             });
                             if (res.ok) {
-                                alert('Comment deleted successfully');
+                                msg.textContent = 'Comment deleted successfully';
+                                msg.classList.add('success');
                                 fetchPosts();
                             } else {
                                 const data = await res.json();
-                                alert(data.error || 'Failed to delete comment');
+                                msg.textContent = data.error || 'Failed to delete comment';
+                                msg.classList.add('error');
                             }
                         } catch (err) {
                             console.error('Delete comment error:', err);
-                            alert('Error: Cannot reach server');
+                            msg.textContent = 'Error: Cannot reach server';
+                            msg.classList.add('error');
                         }
+                        setTimeout(() => {
+                            msg.textContent = '';
+                            msg.classList.remove('error', 'success');
+                        }, 3000);
                     });
                 });
             }
@@ -325,8 +350,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault();
                     const postId = form.dataset.postId;
                     const content = form.querySelector('.comment-content').value;
+                    const msg = document.getElementById('post-message');
                     if (!content) {
-                        alert('Comment cannot be empty');
+                        msg.textContent = 'Comment cannot be empty';
+                        msg.classList.add('error');
+                        setTimeout(() => {
+                            msg.textContent = '';
+                            msg.classList.remove('error', 'success');
+                        }, 3000);
                         return;
                     }
 
@@ -341,16 +372,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         const data = await res.json();
                         if (res.ok) {
-                            alert('Comment added successfully');
+                            msg.textContent = 'Comment added successfully';
+                            msg.classList.add('success');
                             form.reset();
                             fetchPosts();
                         } else {
-                            alert(data.error || 'Failed to add comment');
+                            msg.textContent = data.error || 'Failed to add comment';
+                            msg.classList.add('error');
                         }
                     } catch (err) {
                         console.error('Comment error:', err);
-                        alert('Error: Cannot reach server');
+                        msg.textContent = 'Error: Cannot reach server';
+                        msg.classList.add('error');
                     }
+                    setTimeout(() => {
+                        msg.textContent = '';
+                        msg.classList.remove('error', 'success');
+                    }, 3000);
                 });
             });
         } catch (err) {
@@ -428,22 +466,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.delete-button').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const postId = btn.dataset.postId;
+                        const msg = document.getElementById('post-message');
                         try {
                             const res = await fetch(`/api/posts/${postId}`, {
                                 method: 'DELETE',
                                 headers: { 'Authorization': `Bearer ${token}` },
                             });
                             if (res.ok) {
-                                alert('Post deleted successfully');
+                                msg.textContent = 'Post deleted successfully';
+                                msg.classList.add('success');
                                 fetchAllPosts();
                             } else {
                                 const data = await res.json();
-                                alert(data.error || 'Failed to delete post');
+                                msg.textContent = data.error || 'Failed to delete post';
+                                msg.classList.add('error');
                             }
                         } catch (err) {
                             console.error('Delete error:', err);
-                            alert('Error: Cannot reach server');
+                            msg.textContent = 'Error: Cannot reach server';
+                            msg.classList.add('error');
                         }
+                        setTimeout(() => {
+                            msg.textContent = '';
+                            msg.classList.remove('error', 'success');
+                        }, 3000);
                     });
                 });
 
@@ -461,6 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const updateContent = btn.parentElement.querySelector('.update-content').value;
                         const updatePhoto = btn.parentElement.querySelector('.update-photo').files[0];
                         const formData = new FormData();
+                        const msg = document.getElementById('post-message');
 
                         if (updateContent) formData.append('content', updateContent);
                         if (updatePhoto) formData.append('photo', updatePhoto);
@@ -473,15 +520,22 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                             const data = await res.json();
                             if (res.ok) {
-                                alert('Post updated successfully');
+                                msg.textContent = 'Post updated successfully';
+                                msg.classList.add('success');
                                 fetchAllPosts();
                             } else {
-                                alert(data.error || 'Failed to update post');
+                                msg.textContent = data.error || 'Failed to update post';
+                                msg.classList.add('error');
                             }
                         } catch (err) {
                             console.error('Update error:', err);
-                            alert('Error: Cannot reach server');
+                            msg.textContent = 'Error: Cannot reach server';
+                            msg.classList.add('error');
                         }
+                        setTimeout(() => {
+                            msg.textContent = '';
+                            msg.classList.remove('error', 'success');
+                        }, 3000);
                     });
                 });
 
@@ -489,34 +543,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.delete-comment').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const commentId = btn.dataset.commentId;
+                        const msg = document.getElementById('post-message');
                         try {
                             const res = await fetch(`/api/comments/${commentId}`, {
                                 method: 'DELETE',
                                 headers: { 'Authorization': `Bearer ${token}` },
                             });
                             if (res.ok) {
-                                alert('Comment deleted successfully');
+                                msg.textContent = 'Comment deleted successfully';
+                                msg.classList.add('success');
                                 fetchAllPosts();
                             } else {
                                 const data = await res.json();
-                                alert(data.error || 'Failed to delete comment');
+                                msg.textContent = data.error || 'Failed to delete comment';
+                                msg.classList.add('error');
                             }
                         } catch (err) {
                             console.error('Delete comment error:', err);
-                            alert('Error: Cannot reach server');
+                            msg.textContent = 'Error: Cannot reach server';
+                            msg.classList.add('error');
                         }
+                        setTimeout(() => {
+                            msg.textContent = '';
+                            msg.classList.remove('error', 'success');
+                        }, 3000);
                     });
                 });
             }
 
             // Add event listeners for comment submission
             document.querySelectorAll('.comment-form').forEach(form => {
+?!
                 form.addEventListener('submit', async e => {
                     e.preventDefault();
                     const postId = form.dataset.postId;
                     const content = form.querySelector('.comment-content').value;
+                    const msg = document.getElementById(('post-message');
                     if (!content) {
-                        alert('Comment cannot be empty');
+                        msg.textContent = 'Comment cannot be empty';
+                        msg.classList.add('error');
+                        setTimeout(() => {
+                            msg.textContent = '';
+                            msg.classList.remove('error', 'success');
+                        }, 3000);
                         return;
                     }
 
@@ -531,16 +600,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         const data = await res.json();
                         if (res.ok) {
-                            alert('Comment added successfully');
+                            msg.textContent = 'Comment added successfully';
+                            msg.classList.add('success');
                             form.reset();
                             fetchAllPosts();
                         } else {
-                            alert(data.error || 'Failed to add comment');
+                            msg.textContent = data.error || 'Failed to add comment';
+                            msg.classList.add('error');
                         }
                     } catch (err) {
                         console.error('Comment error:', err);
-                        alert('Error: Cannot reach server');
+                        msg.textContent = 'Error: Cannot reach server';
+                        msg.classList.add('error');
                     }
+                    setTimeout(() => {
+                        msg.textContent = '';
+                        msg.classList.remove('error', 'success');
+                    }, 3000);
                 });
             });
         } catch (err) {
