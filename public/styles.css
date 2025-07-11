@@ -4,7 +4,7 @@ body {
     font-family: 'Poppins', sans-serif;
     background-color: #1C2526;
     color: #E0E0E0;
-    max-width: 900px;
+    max-width: 1200px; /* Increased max-width for wider content */
     margin: 0 auto;
     padding: 20px;
     line-height: 1.6;
@@ -15,6 +15,7 @@ h1 {
     font-weight: 600;
     font-size: 24px;
     margin: 0;
+    text-align: center; /* Center headings */
 }
 
 h2 {
@@ -23,6 +24,7 @@ h2 {
     margin-bottom: 20px;
     text-transform: uppercase;
     letter-spacing: 1px;
+    text-align: center; /* Center headings */
 }
 
 .navbar {
@@ -62,6 +64,9 @@ h2 {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center content */
 }
 
 form {
@@ -70,6 +75,9 @@ form {
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     margin-bottom: 30px;
+    width: 100%;
+    max-width: 800px; /* Wider forms */
+    box-sizing: border-box;
 }
 
 input, textarea {
@@ -83,6 +91,9 @@ input, textarea {
     color: #E0E0E0;
     font-size: 16px;
     transition: border 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box; /* Prevent overflow */
+    word-wrap: break-word; /* Ensure text wraps */
+    overflow: hidden; /* Prevent content from spilling out */
 }
 
 input:focus, textarea:focus {
@@ -124,18 +135,20 @@ button:hover {
 
 .post {
     background-color: #2C3539;
-    padding: 15px;
+    padding: 20px;
     margin-bottom: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     transition: transform 0.2s ease;
     width: 100%;
-    max-width: 500px;
+    max-width: 800px; /* Wider posts */
     min-height: 150px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    align-items: center; /* Center content */
+    overflow: hidden; /* Prevent content overflow */
 }
 
 .post:hover {
@@ -155,12 +168,16 @@ button:hover {
     margin: 0 0 10px;
     color: #E0E0E0;
     flex-grow: 1;
+    word-wrap: break-word; /* Ensure text wraps */
+    overflow: hidden; /* Prevent text overflow */
+    text-align: center; /* Center text */
 }
 
 .post small {
     color: #B0BEC5;
     font-size: 12px;
     margin-top: 10px;
+    text-align: center; /* Center text */
 }
 
 a {
@@ -181,6 +198,8 @@ a:hover {
     text-align: center;
     opacity: 0;
     transition: opacity 0.3s ease;
+    max-width: 800px; /* Wider messages */
+    width: 100%;
 }
 
 .message.success {
@@ -199,6 +218,7 @@ a:hover {
     color: #B0BEC5;
     font-style: italic;
     margin-bottom: 20px;
+    text-align: center; /* Center text */
 }
 
 .admin-controls {
@@ -206,6 +226,7 @@ a:hover {
     gap: 10px;
     margin-top: 10px;
     flex-wrap: wrap;
+    justify-content: center; /* Center buttons */
 }
 
 .delete-button {
@@ -245,6 +266,8 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
+    max-width: 800px; /* Wider update form */
 }
 
 .update-content {
@@ -255,6 +278,9 @@ a:hover {
     border-radius: 5px;
     padding: 12px;
     font-size: 16px;
+    box-sizing: border-box;
+    word-wrap: break-word; /* Ensure text wraps */
+    overflow: hidden; /* Prevent overflow */
 }
 
 .update-photo {
@@ -263,6 +289,7 @@ a:hover {
     color: #E0E0E0;
     border: none;
     border-radius: 5px;
+    box-sizing: border-box;
 }
 
 .submit-update {
@@ -286,6 +313,8 @@ a:hover {
     flex-direction: column;
     gap: 10px;
     margin-top: 10px;
+    width: 100%;
+    max-width: 800px; /* Wider comment form */
 }
 
 .comment-content {
@@ -296,6 +325,9 @@ a:hover {
     border-radius: 5px;
     padding: 12px;
     font-size: 14px;
+    box-sizing: border-box;
+    word-wrap: break-word; /* Ensure text wraps */
+    overflow: hidden; /* Prevent overflow */
 }
 
 .submit-comment {
@@ -318,6 +350,11 @@ a:hover {
     margin-top: 15px;
     padding-top: 10px;
     border-top: 1px solid #B0BEC5;
+    width: 100%;
+    max-width: 800px; /* Wider comments section */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center comments */
 }
 
 .comment {
@@ -326,17 +363,24 @@ a:hover {
     margin-bottom: 10px;
     border-radius: 5px;
     position: relative;
+    width: 100%;
+    max-width: 800px; /* Wider comments */
+    box-sizing: border-box;
+    word-wrap: break-word; /* Ensure text wraps */
+    overflow: hidden; /* Prevent overflow */
 }
 
 .comment p {
     margin: 0 0 5px;
     font-size: 14px;
     color: #E0E0E0;
+    text-align: center; /* Center text */
 }
 
 .comment small {
     font-size: 12px;
     color: #B0BEC5;
+    text-align: center; /* Center text */
 }
 
 .no-comments {
@@ -344,6 +388,7 @@ a:hover {
     color: #B0BEC5;
     font-size: 14px;
     margin: 0;
+    text-align: center; /* Center text */
 }
 
 .delete-comment {
@@ -369,6 +414,7 @@ a:hover {
 @media (max-width: 600px) {
     body {
         padding: 10px;
+        max-width: 100%; /* Full width for smaller screens */
     }
     .navbar {
         flex-direction: column;
@@ -385,8 +431,9 @@ a:hover {
         text-align: center;
         margin: 0 5px;
     }
-    .container, .post {
+    .container, .post, .comments, .comment, form, .update-form, .comment-form {
         padding: 15px;
+        max-width: 100%; /* Full width for smaller screens */
     }
     button {
         width: 100%;
