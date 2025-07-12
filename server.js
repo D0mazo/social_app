@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const multer = require('multer');
 const helmet = require('helmet');
+const cors = require('cors');
 const fs = require('fs');
 require('dotenv').config();
 
@@ -18,8 +19,14 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 // Middleware
 app.use(helmet());
+app.use(cors({
+    origin: ['http://localhost:3000'], // Adjust for production
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.static('public'));
+app.use('/app', express.static(path.join(__dirname, 'app'))); // Serve app directory
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
@@ -40,37 +47,30 @@ const db = new sqlite3.Database('./database.db', (err) => {
 
 // Create tables and apply migrations
 db.serialize(() => {
-    // Create users table
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
-            password TEXT
+            password TEXT,
+            isAdmin BOOLEAN DEFAULT FALSE
         )
     `);
 
-    // Add isAdmin column if not exists
-    db.all("PRAGMA table_info(users)", (err, columns) => {
-        if (err) {
-            console.error('Error checking table schema:', err);
-            return;
-        }
-        const hasIsAdmin = columns.some(col => col.name === 'isAdmin');
-        if (!hasIsAdmin) {
-            db.run('ALTER TABLE users ADD COLUMN isAdmin BOOLEAN DEFAULT FALSE', (err) => {
-                if (err) {
-                    console.error('Error adding isAdmin column:', err);
-                } else {
-                    console.log('Added isAdmin column to users table');
-                    db.run('UPDATE users SET isAdmin = TRUE WHERE username = ?', ['ADMIN'], (err) => {
-                        if (err) console.error('Error setting isAdmin for ADMIN user:', err);
+    // Create admin user if not exists
+    db.get('SELECT * FROM users WHERE username = ?', ['ADMIN'], (err, user) => {
+        if (!user) {
+            bcrypt.hash('ADMIN', 10, (err, hashedPassword) => {
+                if (err) return console.error('Error hashing admin password:', err);
+                db.run('INSERT INTO users (username, password, isAdmin) VALUES (?, ?, ?)',
+                    ['ADMIN', hashedPassword, true],
+                    (err) => {
+                        if (err) console.error('Error creating admin user:', err);
+                        else console.log('Admin user created');
                     });
-                }
             });
         }
     });
 
-    // Create posts table
     db.run(`
         CREATE TABLE IF NOT EXISTS posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,7 +82,6 @@ db.serialize(() => {
         )
     `);
 
-    // Create comments table
     db.run(`
         CREATE TABLE IF NOT EXISTS comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,9 +125,8 @@ app.post('/api/signup', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const isAdmin = username === 'ADMIN' && password === 'ADMIN';
         db.run('INSERT INTO users (username, password, isAdmin) VALUES (?, ?, ?)',
-            [username, hashedPassword, isAdmin],
+            [username, hashedPassword, false], // No auto-admin
             function (err) {
                 if (err) {
                     if (err.message.includes('UNIQUE')) {
@@ -282,7 +280,6 @@ app.delete('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res) => {
         }
         if (!post) return res.status(404).json({ error: 'Post not found' });
 
-        // Delete associated comments
         db.run('DELETE FROM comments WHERE postId = ?', [postId], (err) => {
             if (err) console.error('Delete comments error:', err);
         });
@@ -327,15 +324,13 @@ app.put('/api/posts/:id', authenticateToken, restrictToAdmin, upload.single('pho
             });
         }
 
-        db.run('UPDATE posts SET type = ?, content = ? WHERE id = ?',
-            [type, postContent, postId],
-            function (err) {
-                if (err) {
-                    console.error('Update post error:', err);
-                    return res.status(500).json({ error: 'Failed to update post' });
-                }
-                res.json({ message: 'Post updated successfully' });
-            });
+        db.run('UPDATE posts SET type = ?, content = ? “, [type, postContent, postId], function (err) {
+            if (err) {
+                console.error('Update post error:', err);
+                return res.status(500).json({ error: 'Failed to update post' });
+            }
+            res.json({ message: 'Post updated successfully' });
+        });
     });
 });
 
@@ -351,6 +346,15 @@ app.get('/login', (req, res) => {
 });
 app.get('/user', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'user.html'));
+});
+
+// Close database on server shutdown
+process.on('SIGINT', () => {
+    db.close((err) => {
+        if (err) console.error('Error closing database:', err);
+        console.log('Database connection closed');
+        process.exit(0);
+    });
 });
 
 // Start server
