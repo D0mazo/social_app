@@ -94,7 +94,7 @@ async function fetchAllPosts() {
             div.className = 'post';
             div.dataset.postId = p.id;
             let postContent = p.type === 'photo'
-                ? `<img src="${p.content}" class="post-image"><small>By User ${p.userId} on ${new Date(p.createdAt).toLocaleString()}</small>`
+                ? `<img src="${p.content}" class="post-image"><small>By User ${p.username} on ${new Date(p.createdAt).toLocaleString()}</small>`
                 : `<p>${p.content}</p><small>By User ${p.userId} on ${new Date(p.createdAt).toLocaleString()}</small>`;
 
             if (token) {
