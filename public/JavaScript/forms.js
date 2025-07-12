@@ -1,4 +1,4 @@
-import { token } from './auth.js';
+import { token } from './JavaScript/auth.js';
 
 function setupSignupForm() {
     const signupForm = document.getElementById('signup-form');
