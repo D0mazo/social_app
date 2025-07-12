@@ -1,6 +1,6 @@
-import { checkAuth, setupLogout } from './JavaScript/auth.js';
-import { setupSignupForm, setupLoginForm, setupPostForm } from './JavaScript/forms.js';
-import { fetchPosts, fetchAllPosts } from './JavaScript/posts.js';
+import { checkAuth, setupLogout } from '/JavaScript/auth.js';
+import { setupSignupForm, setupLoginForm, setupPostForm } from '/JavaScript/forms.js';
+import { fetchPosts, fetchAllPosts } from '/JavaScript/posts.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
