@@ -1,5 +1,5 @@
-import { token, isAdminUser } from './JavaScript/auth.js';
-import { fetchComments } from './JavaScript/comments.js';
+import { token, isAdminUser } from '/JavaScript/auth.js';
+import { fetchComments } from '/JavaScript/comments.js';
 
 async function fetchPosts() {
     try {

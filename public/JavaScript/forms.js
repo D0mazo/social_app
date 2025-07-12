@@ -1,4 +1,5 @@
-import { token } from './JavaScript/auth.js';
+import { token } from '/JavaScript/auth.js';
+import { fetchPosts, fetchAllPosts } from '/JavaScript/posts.js';
 
 function setupSignupForm() {
     const signupForm = document.getElementById('signup-form');
