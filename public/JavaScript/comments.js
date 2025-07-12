@@ -1,5 +1,5 @@
-import { token } from './auth.js';
-import { fetchPosts, fetchAllPosts } from './posts.js';
+import { token } from './JavaScript/auth.js';
+import { fetchPosts, fetchAllPosts } from './JavaScript/posts.js';
 
 async function fetchComments(postId) {
     try {
