@@ -433,7 +433,7 @@ a:hover {
     }
     .container, .post, .comments, .comment, form, .update-form, .comment-form {
         padding: 15px;
-        max-width: 100%; /* Full width for smaller screens */
+        max-width: 150%; /* Full width for smaller screens */
     }
     button {
         width: 100%;

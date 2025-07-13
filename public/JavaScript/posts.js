@@ -1,5 +1,5 @@
 import { token, isAdminUser } from '/JavaScript/auth.js';
-import { fetchComments } from '/JavaScript/comments.js';
+import { fetchComments, setupCommentDeletion } from '/JavaScript/comments.js';
 
 async function fetchPosts() {
     try {
@@ -70,6 +70,7 @@ async function fetchPosts() {
 
         setupPostEventListeners(isAdmin);
         setupCommentEventListeners();
+        if (isAdmin) setupCommentDeletion(); // Enable comment deletion for admins
     } catch (err) {
         console.error('Fetch posts error:', err);
     }
@@ -138,6 +139,7 @@ async function fetchAllPosts() {
 
         setupPostEventListeners(isAdmin);
         setupCommentEventListeners();
+        if (isAdmin) setupCommentDeletion(); // Enable comment deletion for admins
     } catch (err) {
         console.error('Fetch all posts error:', err);
     }
