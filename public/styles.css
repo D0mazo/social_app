@@ -4,7 +4,7 @@ body {
     font-family: 'Poppins', sans-serif;
     background-color: #1C2526;
     color: #E0E0E0;
-    max-width: 1200px; /* Increased max-width for wider content */
+    max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
     line-height: 1.6;
@@ -15,7 +15,7 @@ h1 {
     font-weight: 600;
     font-size: 24px;
     margin: 0;
-    text-align: center; /* Center headings */
+    text-align: center;
 }
 
 h2 {
@@ -24,7 +24,7 @@ h2 {
     margin-bottom: 20px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-align: center; /* Center headings */
+    text-align: center;
 }
 
 .navbar {
@@ -66,7 +66,10 @@ h2 {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center content */
+    align-items: center;
+    width: 100%;
+    max-width: 840px;
+    box-sizing: border-box;
 }
 
 form {
@@ -76,8 +79,10 @@ form {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     margin-bottom: 30px;
     width: 100%;
-    max-width: 800px; /* Wider forms */
+    max-width: 800px;
     box-sizing: border-box;
+    overflow-wrap: break-word;
+    overflow: hidden;
 }
 
 input, textarea {
@@ -91,9 +96,9 @@ input, textarea {
     color: #E0E0E0;
     font-size: 16px;
     transition: border 0.3s ease, box-shadow 0.3s ease;
-    box-sizing: border-box; /* Prevent overflow */
-    word-wrap: break-word; /* Ensure text wraps */
-    overflow: hidden; /* Prevent content from spilling out */
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    overflow: hidden;
 }
 
 input:focus, textarea:focus {
@@ -141,14 +146,14 @@ button:hover {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     transition: transform 0.2s ease;
     width: 100%;
-    max-width: 800px; /* Wider posts */
+    max-width: 800px;
     min-height: 150px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    align-items: center; /* Center content */
-    overflow: hidden; /* Prevent content overflow */
+    align-items: center;
+    overflow: hidden;
 }
 
 .post:hover {
@@ -168,16 +173,16 @@ button:hover {
     margin: 0 0 10px;
     color: #E0E0E0;
     flex-grow: 1;
-    word-wrap: break-word; /* Ensure text wraps */
-    overflow: hidden; /* Prevent text overflow */
-    text-align: center; /* Center text */
+    overflow-wrap: break-word;
+    overflow: hidden;
+    text-align: center;
 }
 
 .post small {
     color: #B0BEC5;
     font-size: 12px;
     margin-top: 10px;
-    text-align: center; /* Center text */
+    text-align: center;
 }
 
 a {
@@ -198,7 +203,7 @@ a:hover {
     text-align: center;
     opacity: 0;
     transition: opacity 0.3s ease;
-    max-width: 800px; /* Wider messages */
+    max-width: 800px;
     width: 100%;
 }
 
@@ -218,7 +223,7 @@ a:hover {
     color: #B0BEC5;
     font-style: italic;
     margin-bottom: 20px;
-    text-align: center; /* Center text */
+    text-align: center;
 }
 
 .admin-controls {
@@ -226,7 +231,7 @@ a:hover {
     gap: 10px;
     margin-top: 10px;
     flex-wrap: wrap;
-    justify-content: center; /* Center buttons */
+    justify-content: center;
 }
 
 .delete-button {
@@ -267,7 +272,8 @@ a:hover {
     flex-direction: column;
     gap: 10px;
     width: 100%;
-    max-width: 800px; /* Wider update form */
+    max-width: 800px;
+    box-sizing: border-box;
 }
 
 .update-content {
@@ -279,8 +285,8 @@ a:hover {
     padding: 12px;
     font-size: 16px;
     box-sizing: border-box;
-    word-wrap: break-word; /* Ensure text wraps */
-    overflow: hidden; /* Prevent overflow */
+    overflow-wrap: break-word;
+    overflow: hidden;
 }
 
 .update-photo {
@@ -314,7 +320,8 @@ a:hover {
     gap: 10px;
     margin-top: 10px;
     width: 100%;
-    max-width: 800px; /* Wider comment form */
+    max-width: 800px;
+    box-sizing: border-box;
 }
 
 .comment-content {
@@ -326,8 +333,8 @@ a:hover {
     padding: 12px;
     font-size: 14px;
     box-sizing: border-box;
-    word-wrap: break-word; /* Ensure text wraps */
-    overflow: hidden; /* Prevent overflow */
+    overflow-wrap: break-word;
+    overflow: hidden;
 }
 
 .submit-comment {
@@ -351,10 +358,11 @@ a:hover {
     padding-top: 10px;
     border-top: 1px solid #B0BEC5;
     width: 100%;
-    max-width: 800px; /* Wider comments section */
+    max-width: 800px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center comments */
+    align-items: center;
 }
 
 .comment {
@@ -364,23 +372,23 @@ a:hover {
     border-radius: 5px;
     position: relative;
     width: 100%;
-    max-width: 800px; /* Wider comments */
+    max-width: 800px;
     box-sizing: border-box;
-    word-wrap: break-word; /* Ensure text wraps */
-    overflow: hidden; /* Prevent overflow */
+    overflow-wrap: break-word;
+    overflow: hidden;
 }
 
 .comment p {
     margin: 0 0 5px;
     font-size: 14px;
     color: #E0E0E0;
-    text-align: center; /* Center text */
+    text-align: center;
 }
 
 .comment small {
     font-size: 12px;
     color: #B0BEC5;
-    text-align: center; /* Center text */
+    text-align: center;
 }
 
 .no-comments {
@@ -388,7 +396,7 @@ a:hover {
     color: #B0BEC5;
     font-size: 14px;
     margin: 0;
-    text-align: center; /* Center text */
+    text-align: center;
 }
 
 .delete-comment {
@@ -414,7 +422,7 @@ a:hover {
 @media (max-width: 600px) {
     body {
         padding: 10px;
-        max-width: 100%; /* Full width for smaller screens */
+        max-width: 100%;
     }
     .navbar {
         flex-direction: column;
@@ -433,7 +441,8 @@ a:hover {
     }
     .container, .post, .comments, .comment, form, .update-form, .comment-form {
         padding: 15px;
-        max-width: 150%; /* Full width for smaller screens */
+        max-width: 100%;
+        width: 100%;
     }
     button {
         width: 100%;
