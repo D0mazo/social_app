@@ -67,8 +67,6 @@ h2 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    max-width: 840px;
     box-sizing: border-box;
 }
 
@@ -145,8 +143,7 @@ button:hover {
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     transition: transform 0.2s ease;
-    width: 100%;
-    max-width: 800px;
+    width: 800px;
     min-height: 150px;
     box-sizing: border-box;
     display: flex;
@@ -322,6 +319,7 @@ a:hover {
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
+    align-items: center;
 }
 
 .comment-content {
@@ -335,6 +333,7 @@ a:hover {
     box-sizing: border-box;
     overflow-wrap: break-word;
     overflow: hidden;
+    width: 400px;
 }
 
 .submit-comment {
@@ -346,6 +345,7 @@ a:hover {
     border-radius: 5px;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 400px;
 }
 
 .submit-comment:hover {
