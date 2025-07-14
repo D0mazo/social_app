@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const fs = require('fs');
 require('dotenv').config();
+const { initDatabase } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,13 +21,13 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 // Middleware
 app.use(helmet());
 app.use(cors({
-    origin: ['http://localhost:3000'], // Adjust for your frontend's origin
+    origin: ['http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.static('public'));
-app.use('/app', express.static(path.join(__dirname, 'app'))); // Serve app directory for JavaScript files
+app.use('/app', express.static(path.join(__dirname, 'app')));
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
@@ -45,63 +46,8 @@ const db = new sqlite3.Database('./database.db', (err) => {
     console.log('Connected to SQLite database');
 });
 
-// Create tables and apply migrations
-db.serialize(() => {
-    // Create users table
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT
-        )
-    `);
-
-    // Add isAdmin column if not exists
-    db.all("PRAGMA table_info(users)", (err, columns) => {
-        if (err) {
-            console.error('Error checking table schema:', err);
-            return;
-        }
-        const hasIsAdmin = columns.some(col => col.name === 'isAdmin');
-        if (!hasIsAdmin) {
-            db.run('ALTER TABLE users ADD COLUMN isAdmin BOOLEAN DEFAULT FALSE', (err) => {
-                if (err) {
-                    console.error('Error adding isAdmin column:', err);
-                } else {
-                    console.log('Added isAdmin column to users table');
-                    db.run('UPDATE users SET isAdmin = TRUE WHERE username = ?', ['ADMIN'], (err) => {
-                        if (err) console.error('Error setting isAdmin for ADMIN user:', err);
-                    });
-                }
-            });
-        }
-    });
-
-    // Create posts table
-    db.run(`
-        CREATE TABLE IF NOT EXISTS posts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            userId INTEGER,
-            type TEXT,
-            content TEXT,
-            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (userId) REFERENCES users(id)
-        )
-    `);
-
-    // Create comments table
-    db.run(`
-        CREATE TABLE IF NOT EXISTS comments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            postId INTEGER,
-            userId INTEGER,
-            content TEXT,
-            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (postId) REFERENCES posts(id),
-            FOREIGN KEY (userId) REFERENCES users(id)
-        )
-    `);
-});
+// Initialize database schema
+initDatabase(db);
 
 // JWT Auth Middleware
 function authenticateToken(req, res, next) {
@@ -127,19 +73,19 @@ function restrictToAdmin(req, res, next) {
 
 // Signup route
 app.post('/api/signup', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password)
-        return res.status(400).json({ error: 'Username and password are required.' });
+    const { username, email, password } = req.body;
+    if (!username || !email || !password)
+        return res.status(400).json({ error: 'Username, email, and password are required.' });
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         const isAdmin = username === 'ADMIN' && password === 'ADMIN';
-        db.run('INSERT INTO users (username, password, isAdmin) VALUES (?, ?, ?)',
-            [username, hashedPassword, isAdmin],
+        db.run('INSERT INTO users (username, email, password, isAdmin) VALUES (?, ?, ?, ?)',
+            [username, email, hashedPassword, isAdmin],
             function (err) {
                 if (err) {
                     if (err.message.includes('UNIQUE')) {
-                        return res.status(400).json({ error: 'Username already exists' });
+                        return res.status(400).json({ error: 'Username or email already exists' });
                     }
                     console.error('Signup error:', err);
                     return res.status(500).json({ error: 'Database error' });
@@ -264,7 +210,7 @@ app.delete('/api/comments/:id', authenticateToken, restrictToAdmin, (req, res) =
     db.get('SELECT * FROM comments WHERE id = ?', [commentId], (err, comment) => {
         if (err) {
             console.error('Fetch comment error:', err);
-            return res.status(500).json({ error: 'Failed to fetch comment' });
+            return res.status(500).json({ error: `Failed to fetch comment: ${err.message}` });
         }
         if (!comment) return res.status(404).json({ error: 'Comment not found' });
 
@@ -354,10 +300,10 @@ app.get('/signup', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'signup.html'));
 });
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname,'public', 'html', 'login.html'));
+    res.sendFile(path.join(__dirname, 'public', 'html', 'login.html'));
 });
 app.get('/user', (req, res) => {
-    res.sendFile(path.join(__dirname,'public', 'html', 'user.html'));
+    res.sendFile(path.join(__dirname, 'public', 'html', 'user.html'));
 });
 
 // Start server
