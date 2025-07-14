@@ -7,14 +7,26 @@ function setupSignupForm() {
         signupForm.addEventListener('submit', async e => {
             e.preventDefault();
             const username = document.getElementById('signup-username').value;
+            const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
             const msg = document.getElementById('signup-message');
+
+            if (password !== confirmPassword) {
+                msg.textContent = 'Passwords do not match';
+                msg.classList.add('error');
+                setTimeout(() => {
+                    msg.textContent = '';
+                    msg.classList.remove('error');
+                }, 3000);
+                return;
+            }
 
             try {
                 const res = await fetch('/api/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password }),
+                    body: JSON.stringify({ username, email, password }),
                 });
                 const data = await res.json();
 
