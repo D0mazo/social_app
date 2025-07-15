@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .profile-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: #ccc;
+            margin: 0 auto;
+            display: block;
+        }
+        .profile-info {
+            margin: 20px 0;
+        }
+        .profile-info h2 {
+            margin: 0 0 10px;
+            color: #333;
+        }
+        .profile-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .edit-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .edit-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <img class="profile-pic" src="https://via.placeholder.com/150" alt="Profile Picture">
+        <div class="profile-info">
+            <h2 id="userNameS">John Doe</h2>
+            <p id="userEmailS">john.doe@example.com</p>
+            <p id="userBioS">Software developer with a passion for creating innovative solutions.</p>
+            <p id="userLocationS">San Francisco, CA</p>
+        </div>
+        <button class="edits-btn" onclick="editProfile()">Edit Profile</button>
+    </div>
+
+    <!-- <script>
+        function editProfile() {
+            const name = prompt("Enter new name:", document.getElementById("userName").textContent);
+            const email = prompt("Enter new email:", document.getElementById("userEmail").textContent);
+            const bio = prompt("Enter new bio:", document.getElementById("userBio").textContent);
+            const location = prompt("Enter new location:", document.getElementById("userLocation").textContent);
+
+            if (name) document.getElementById("userName").textContent = name;
+            if (email) document.getElementById("userEmail").textContent = email;
+            if (bio) document.getElementById("userBio").textContent = bio;
+            if (location) document.getElementById("userLocation").textContent = location;
+        }
+    </script> -->
+</body>
+</html>
