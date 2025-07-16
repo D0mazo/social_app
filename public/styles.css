@@ -128,6 +128,7 @@ button:hover {
 
 #logout-button {
     background: linear-gradient(135deg, #FF5722, #D81B60);
+    font-weight: 600;
     margin-bottom: 30px;
     display: inline-block;
 }
@@ -461,17 +462,20 @@ a:hover {
     }
 }
 .user-info {
-    position: absolute;
+    position: fixed; /* Changed to fixed to stay in viewport corner */
     top: 15px;
     right: 20px;
     font-size: 16px;
     font-weight: 600;
     color: #1C2526;
-    background: linear-gradient(135deg, #4CAF50, #388E3C); /* Green gradient to stand out */
+    background: linear-gradient(135deg, #4CAF50, #388E3C); /* Green gradient */
     padding: 8px 16px;
     border-radius: 5px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 1000; /* Ensures it stays above other elements */
+    max-width: 120px; /* Prevents it from getting too wide */
+    box-sizing: border-box; /* Ensures padding doesn't cause overflow */
 }
 
 .user-info:hover {
@@ -482,9 +486,10 @@ a:hover {
 /* Responsive adjustment for user-info */
 @media (max-width: 600px) {
     .user-info {
-        position: static;
-        margin-top: 10px;
-        width: 100%;
+        position: static; /* Falls back to normal flow on small screens */
+        margin: 10px auto; /* Centers with margin */
+        width: 90%; /* Responsive width */
+        max-width: 300px; /* Limits width on small screens */
         text-align: center;
         padding: 10px;
     }
