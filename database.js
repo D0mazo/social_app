@@ -1,12 +1,15 @@
 const initDatabase = (db) => {
     db.serialize(() => {
-        // Create users table
+        // Create users table with bio, location, and profilePic
         db.run(`
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE,
                 email TEXT UNIQUE,
                 password TEXT,
+                bio TEXT,
+                location TEXT,
+                profilePic TEXT,
                 isAdmin BOOLEAN DEFAULT FALSE
             )
         `, (err) => {

@@ -1,4 +1,4 @@
-import { token } from '/JavaScript/auth.js';
+import { token } from '/JavaScript/auth.js'; // Keep if auth.js manages token globally, else remove
 import { fetchPosts, fetchAllPosts } from '/JavaScript/posts.js';
 
 function setupSignupForm() {
@@ -71,6 +71,7 @@ function setupLoginForm() {
 
                 if (data.token) {
                     localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', username); // Store username
                     msg.textContent = 'Login successful! Redirecting...';
                     msg.classList.add('success');
                     setTimeout(() => window.location.href = '/user', 2000);
@@ -101,6 +102,7 @@ function setupPostForm(fetchPosts) {
             const photo = document.getElementById('post-photo').files[0];
             const msg = document.getElementById('post-message');
             const formData = new FormData();
+            const token = localStorage.getItem('token'); // Use localStorage instead of imported token
 
             if (content) formData.append('content', content);
             if (photo) formData.append('photo', photo);
@@ -118,6 +120,7 @@ function setupPostForm(fetchPosts) {
                     msg.classList.add('success');
                     postForm.reset();
                     fetchPosts();
+                    fetchAllPosts(); // Call fetchAllPosts if needed
                 } else {
                     msg.textContent = data.error || 'Post failed';
                     msg.classList.add('error');
@@ -136,4 +139,19 @@ function setupPostForm(fetchPosts) {
     }
 }
 
-export { setupSignupForm, setupLoginForm, setupPostForm };
+function setupLogoutButton() {
+    const logoutButton = document.getElementById('logout-button');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            const userDisplay = document.getElementById('logged-in-user');
+            if (userDisplay) {
+                userDisplay.textContent = 'Logged in as: Guest';
+            }
+            window.location.href = '/login';
+        });
+    }
+}
+
+export { setupSignupForm, setupLoginForm, setupPostForm, setupLogoutButton };
