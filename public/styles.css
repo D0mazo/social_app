@@ -462,11 +462,30 @@ a:hover {
 }
 .user-info {
     position: absolute;
-    top: 10px;
+    top: 15px;
     right: 20px;
     font-size: 16px;
-    color: #fff;
+    font-weight: 600;
+    color: #1C2526;
+    background: linear-gradient(135deg, #4CAF50, #388E3C); /* Green gradient to stand out */
+    padding: 8px 16px;
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.user-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.5);
+}
 
-
+/* Responsive adjustment for user-info */
+@media (max-width: 600px) {
+    .user-info {
+        position: static;
+        margin-top: 10px;
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+    }
+}
