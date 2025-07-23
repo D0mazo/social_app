@@ -16,6 +16,7 @@ h1 {
     font-size: 24px;
     margin: 0;
     text-align: center;
+    margin-bottom: 20px;
 }
 
 h2 {
@@ -70,20 +71,46 @@ h2 {
     box-sizing: border-box;
 }
 
-form {
+.chat-container {
     background-color: #2C3539;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    height: 400px;
+    overflow-y: auto;
     margin-bottom: 30px;
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
-    overflow-wrap: break-word;
-    overflow: hidden;
 }
 
-input, textarea {
+.message {
+    background-color: #3A4447;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    max-width: 70%;
+    margin-left: auto;
+    margin-right: 10px;
+    overflow-wrap: break-word;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.message:hover {
+    transform: translateY(-2px);
+}
+
+.input-container {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 800px;
+    box-sizing: border-box;
+}
+
+input[type="text"] {
     display: block;
     width: 100%;
     padding: 12px;
@@ -99,15 +126,10 @@ input, textarea {
     overflow: hidden;
 }
 
-input:focus, textarea:focus {
+input:focus {
     outline: none;
     border: 2px solid #FFC107;
     box-shadow: 0 0 8px rgba(255, 193, 7, 0.3);
-}
-
-textarea {
-    resize: vertical;
-    min-height: 100px;
 }
 
 button {
@@ -129,7 +151,6 @@ button:hover {
 #logout-button {
     background: linear-gradient(135deg, #FF5722, #D81B60);
     font-weight: 600;
-    margin-bottom: 30px;
     display: inline-block;
 }
 
@@ -191,18 +212,6 @@ a {
 
 a:hover {
     text-decoration: underline;
-}
-
-.message {
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    font-size: 14px;
-    text-align: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    max-width: 800px;
-    width: 100%;
 }
 
 .message.success {
@@ -419,63 +428,21 @@ a:hover {
     box-shadow: 0 4px 10px rgba(211, 47, 47, 0.5);
 }
 
-/* Responsive Design */
-@media (max-width: 600px) {
-    body {
-        padding: 10px;
-        max-width: 100%;
-    }
-    .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 10px;
-    }
-    .nav-buttons {
-        margin-top: 10px;
-        width: 100%;
-        justify-content: space-between;
-    }
-    .nav-button {
-        flex: 1;
-        text-align: center;
-        margin: 0 5px;
-    }
-    .container, .post, .comments, .comment, form, .update-form, .comment-form {
-        padding: 15px;
-        max-width: 100%;
-        width: 100%;
-    }
-    button {
-        width: 100%;
-        padding: 12px;
-    }
-    .admin-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .delete-button, .update-button, .submit-update, .submit-comment, .delete-comment {
-        width: 100%;
-        padding: 12px;
-    }
-    .comment-form {
-        margin-top: 15px;
-    }
-}
 .user-info {
-    position: fixed; /* Changed to fixed to stay in viewport corner */
+    position: fixed;
     top: 15px;
     right: 20px;
     font-size: 16px;
     font-weight: 600;
     color: #1C2526;
-    background: linear-gradient(135deg, #4CAF50, #388E3C); /* Green gradient */
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
     padding: 8px 16px;
     border-radius: 5px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    z-index: 1000; /* Ensures it stays above other elements */
-    max-width: 120px; /* Prevents it from getting too wide */
-    box-sizing: border-box; /* Ensures padding doesn't cause overflow */
+    z-index: 1000;
+    max-width: 120px;
+    box-sizing: border-box;
 }
 
 .user-info:hover {
@@ -483,13 +450,60 @@ a:hover {
     box-shadow: 0 4px 10px rgba(76, 175, 80, 0.5);
 }
 
-/* Responsive adjustment for user-info */
 @media (max-width: 600px) {
+    body {
+        padding: 10px;
+        max-width: 100%;
+    }
+
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px;
+    }
+
+    .nav-buttons {
+        margin-top: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .nav-button {
+        flex: 1;
+        text-align: center;
+        margin: 0 5px;
+    }
+
+    .container, .chat-container, .input-container, .post, .comments, .comment, .update-form, .comment-form {
+        padding: 15px;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .admin-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .delete-button, .update-button, .submit-update, .submit-comment, .delete-comment {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .comment-form {
+        margin-top: 15px;
+    }
+
     .user-info {
-        position: static; /* Falls back to normal flow on small screens */
-        margin: 10px auto; /* Centers with margin */
-        width: 90%; /* Responsive width */
-        max-width: 300px; /* Limits width on small screens */
+        position: static;
+        margin: 10px auto;
+        width: 90%;
+        max-width: 300px;
         text-align: center;
         padding: 10px;
     }
