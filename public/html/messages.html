@@ -4,132 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Messaging App</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #1C2526;
-            color: #E0E0E0;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-
-        h1 {
-            color: #FFC107;
-            font-weight: 600;
-            font-size: 24px;
-            margin: 0;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .chat-container {
-            background-color: #2C3539;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            height: 400px;
-            overflow-y: auto;
-            margin-bottom: 30px;
-            width: 100%;
-            max-width: 800px;
-            box-sizing: border-box;
-        }
-
-        .message {
-            background-color: #3A4447;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            max-width: 70%;
-            margin-left: auto;
-            margin-right: 10px;
-            overflow-wrap: break-word;
-            overflow: hidden;
-            transition: transform 0.2s ease;
-        }
-
-        .message:hover {
-            transform: translateY(-2px);
-        }
-
-        .input-container {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            max-width: 800px;
-            box-sizing: border-box;
-        }
-
-        input[type="text"] {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 5px;
-            background-color: #3A4447;
-            color: #E0E0E0;
-            font-size: 16px;
-            transition: border 0.3s ease, box-shadow 0.3s ease;
-            box-sizing: border-box;
-            overflow-wrap: break-word;
-            overflow: hidden;
-        }
-
-        input:focus {
-            outline: none;
-            border: 2px solid #FFC107;
-            box-shadow: 0 0 8px rgba(255, 193, 7, 0.3);
-        }
-
-        button {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #FFC107, #FFA000);
-            color: #1C2526;
-            font-weight: 600;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.5);
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-                max-width: 100%;
-            }
-
-            .chat-container, .input-container {
-                padding: 15px;
-                max-width: 100%;
-                width: 100%;
-            }
-
-            button {
-                width: 100%;
-                padding: 12px;
-            }
-        }
-    </style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Messaging App</h1>
-    <div class="chat-container" id="chatContainer">
-        <!-- Messages will appear here -->
+    <div class="navbar">
+        <h1>Messaging App</h1>
+        <div class="nav-buttons">
+            <a href="#" class="nav-button">Home</a>
+            <a href="#" class="nav-button">About</a>
+            <a href="#" id="logout-button" class="nav-button">Logout</a>
+        </div>
     </div>
-    <div class="input-container">
-        <input type="text" id="messageInput" placeholder="Type a message...">
-        <button onclick="sendMessage()">Send</button>
+    <div class="container">
+        <div class="chat-container" id="chatContainer">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
     </div>
 </body>
 </html>
