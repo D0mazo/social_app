@@ -1,0 +1,94 @@
+/* Styles for comments and comment forms */
+.comments {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #B0C4DE;
+    width: 100%;
+    max-width: 900px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.comment {
+    background: linear-gradient(135deg, #4A6A63, #3B5E57);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.comment:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.comment p {
+    margin: 0 0 10px;
+    font-size: 15px;
+    color: #F5F5F5;
+    text-align: center;
+}
+
+.comment small {
+    font-size: 13px;
+    color: #B0C4DE;
+    text-align: center;
+}
+
+.no-comments {
+    font-style: italic;
+    color: #B0C4DE;
+    font-size: 15px;
+    margin: 0;
+    text-align: center;
+}
+
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+    width: 100%;
+    max-width: 900px;
+    box-sizing: border-box;
+    align-items: center;
+}
+
+.comment-content {
+    min-height: 70px;
+    background: #4A6A63;
+    color: #F5F5F5;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 15px;
+    box-sizing: border-box;
+    width: 500px;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.delete-comment {
+    background: linear-gradient(135deg, #E74C3C, #C0392B);
+    color: #F5F5F5;
+    padding: 8px 15px;
+    font-size: 13px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+.delete-comment:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+}
