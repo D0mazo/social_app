@@ -1,0 +1,11 @@
+/* Global styles for the body */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #1A3C34 0%, #2E4A47 100%);
+    color: #F5F5F5;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px;
+    line-height: 1.8;
+    overflow-x: hidden;
+}
