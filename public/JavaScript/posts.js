@@ -1,7 +1,7 @@
 import { isAdminUser } from '/JavaScript/auth.js';
 import { fetchComments, setupCommentDeletion } from '/JavaScript/comments.js';
 
-// Base URL for API calls (configurable for subdirectories)
+// Base URL for API calls
 const BASE_URL = process.env.BASE_URL || '';
 const API_URL = `${BASE_URL}/api`;
 
@@ -112,7 +112,7 @@ async function fetchPosts({ endpoint, containerId, showUsername = false }) {
 
         setupPostEventListeners(isAdmin, endpoint);
         setupCommentEventListeners(endpoint);
-        if (isAdmin) setupCommentDeletion();
+        if (isAdmin) setupCommentDeletion({ containerId, endpoint });
     } catch (err) {
         console.error(`Fetch posts error (${endpoint}):`, err);
         showNotification('Failed to load posts');
@@ -236,11 +236,8 @@ function setupCommentEventListeners(endpoint) {
     });
 }
 
-// Export fetchPosts and fetchAllPosts for compatibility
-export async function fetchPosts() {
-    await fetchPosts({ endpoint: 'posts', containerId: 'posts' });
-}
-
-export async function fetchAllPosts() {
+async function fetchAllPosts() {
     await fetchPosts({ endpoint: 'all-posts', containerId: 'all-posts', showUsername: true });
 }
+
+export { fetchPosts, fetchAllPosts };

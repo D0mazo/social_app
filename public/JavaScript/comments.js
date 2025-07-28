@@ -1,10 +1,10 @@
 import { fetchPosts } from '/JavaScript/posts.js';
 
-// Base URL for API calls (configurable for subdirectories)
+// Base URL for API calls
 const BASE_URL = process.env.BASE_URL || '';
 const API_URL = `${BASE_URL}/api`;
 
-// Utility to show notifications (consistent with posts.js)
+// Utility to show notifications
 function showNotification(message, type = 'error') {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
@@ -31,7 +31,6 @@ function setupCommentDeletion({ containerId, endpoint }) {
         return;
     }
 
-    // Use event delegation to handle dynamically added delete buttons
     container.addEventListener('click', async (e) => {
         if (!e.target.classList.contains('delete-comment')) return;
 

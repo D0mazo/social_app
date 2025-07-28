@@ -8,11 +8,11 @@ const helmet = require('helmet');
 const cors = require('cors');
 const fs = require('fs');
 require('dotenv').config();
-const { initDatabase } = require('./database');
+const { initDatabase } = require('./initDatabase');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 if (!JWT_SECRET) {
     console.error('JWT_SECRET is not defined in environment variables');
@@ -21,22 +21,33 @@ if (!JWT_SECRET) {
 
 // Create uploads directory if not exists
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(UploadsDir, { recursive: true });
 
 // Middleware
 app.use(helmet());
 const allowedOrigins = process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(',')
-    : ['http://localhost:3000'];
+    : ['http://localhost:3000', 'http://localhost:3000/app'];
 
 app.use(cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
-app.use(express.static('public'));
-app.use('/app', express.static(path.join(__dirname, 'app')));
+app.use(express.static('public', {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+    }
+}));
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
@@ -44,7 +55,7 @@ const storage = multer.diskStorage({
         cb(null, 'public/uploads');
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
+        cb(null, `${Date.now()}${path.extname(file.originalname)}`);
     }
 });
 
@@ -62,12 +73,28 @@ const upload = multer({
 
 // SQLite database setup
 const db = new sqlite3.Database('./database.db', (err) => {
-    if (err) return console.error('Database connection failed:', err.message);
+    if (err) {
+        console.error('Database connection failed:', err.message);
+        process.exit(1);
+    }
     console.log('Connected to SQLite database');
 });
 
 // Initialize database schema
-initDatabase(db);
+(async () => {
+    try {
+        await initDatabase(db);
+        console.log('Database schema initialized');
+    } catch (err) {
+        console.error('Database initialization failed:', err.message);
+        process.exit(1);
+    }
+})();
+
+// Input validation utilities
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidUsername = (username) => /^[A-Za-z0-9]{3,20}$/.test(username);
+const isValidPassword = (password) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
 
 // JWT Auth Middleware
 function authenticateToken(req, res, next) {
@@ -94,9 +121,9 @@ function restrictToAdmin(req, res, next) {
 // Get user profile
 app.get('/api/user', authenticateToken, (req, res) => {
     const userId = req.user.userId;
-    db.get('SELECT username, email, bio, location, profilePic FROM users WHERE id = ?', [userId], (err, user) => {
+    db.get('SELECT id, username, email, bio, location, profilePic, isAdmin FROM users WHERE id = ?', [userId], (err, user) => {
         if (err) {
-            console.error('Fetch user profile error:', err);
+            console.error('Fetch user profile error:', err.message);
             return res.status(500).json({ error: 'Failed to fetch user profile' });
         }
         if (!user) return res.status(404).json({ error: 'User not found' });
@@ -112,6 +139,12 @@ app.put('/api/user', authenticateToken, (req, res) => {
     if (!username || !email) {
         return res.status(400).json({ error: 'Username and email are required.' });
     }
+    if (!isValidUsername(username)) {
+        return res.status(400).json({ error: 'Username must be 3-20 characters, alphanumeric only' });
+    }
+    if (!isValidEmail(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
 
     db.run(
         'UPDATE users SET username = ?, email = ?, bio = ?, location = ? WHERE id = ?',
@@ -121,7 +154,7 @@ app.put('/api/user', authenticateToken, (req, res) => {
                 if (err.message.includes('UNIQUE')) {
                     return res.status(400).json({ error: 'Username or email already exists' });
                 }
-                console.error('Update user profile error:', err);
+                console.error('Update user profile error:', err.message);
                 return res.status(500).json({ error: 'Failed to update user profile' });
             }
             res.json({ message: 'Profile updated successfully' });
@@ -130,16 +163,7 @@ app.put('/api/user', authenticateToken, (req, res) => {
 });
 
 // Upload profile photo
-app.post('/api/user/photo', authenticateToken, (req, res, next) => {
-    upload.single('photo')(req, res, (err) => {
-        if (err instanceof multer.MulterError) {
-            return res.status(400).json({ error: 'File upload error: ' + err.message });
-        } else if (err) {
-            return res.status(400).json({ error: err.message });
-        }
-        next();
-    });
-}, (req, res) => {
+app.post('/api/user/photo', authenticateToken, upload.single('photo'), (req, res) => {
     const userId = req.user.userId;
     const profilePic = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -147,22 +171,23 @@ app.post('/api/user/photo', authenticateToken, (req, res, next) => {
         return res.status(400).json({ error: 'No photo provided' });
     }
 
-    // Delete old profile photo if exists
     db.get('SELECT profilePic FROM users WHERE id = ?', [userId], (err, user) => {
         if (err) {
-            console.error('Fetch user for photo deletion error:', err);
+            console.error('Fetch user for photo deletion error:', err.message);
             return res.status(500).json({ error: 'Failed to fetch user' });
         }
         if (user && user.profilePic) {
             const oldFilePath = path.join(__dirname, 'public', user.profilePic);
             fs.unlink(oldFilePath, (err) => {
-                if (err) console.error('Failed to delete old profile photo:', err);
+                if (err && err.code !== 'ENOENT') {
+                    console.error('Failed to delete old profile photo:', err.message);
+                }
             });
         }
 
         db.run('UPDATE users SET profilePic = ? WHERE id = ?', [profilePic, userId], function (err) {
             if (err) {
-                console.error('Update profile photo error:', err);
+                console.error('Update profile photo error:', err.message);
                 return res.status(500).json({ error: 'Failed to update profile photo' });
             }
             res.json({ message: 'Profile photo uploaded successfully', profilePic });
@@ -173,39 +198,49 @@ app.post('/api/user/photo', authenticateToken, (req, res, next) => {
 // Signup route
 app.post('/api/signup', async (req, res) => {
     const { username, email, password } = req.body;
-    if (!username || !email || !password)
+    if (!username || !email || !password) {
         return res.status(400).json({ error: 'Username, email, and password are required.' });
+    }
+    if (!isValidUsername(username)) {
+        return res.status(400).json({ error: 'Username must be 3-20 characters, alphanumeric only' });
+    }
+    if (!isValidEmail(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
+    if (!isValidPassword(password)) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters with a letter and a number' });
+    }
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const isAdmin = username === 'ADMIN' && password === 'ADMIN';
         db.run('INSERT INTO users (username, email, password, isAdmin) VALUES (?, ?, ?, ?)',
-            [username, email, hashedPassword, isAdmin],
+            [username, email, hashedPassword, 0], // No automatic admin assignment
             function (err) {
                 if (err) {
                     if (err.message.includes('UNIQUE')) {
                         return res.status(400).json({ error: 'Username or email already exists' });
                     }
-                    console.error('Signup error:', err);
+                    console.error('Signup error:', err.message);
                     return res.status(500).json({ error: 'Database error' });
                 }
                 res.status(201).json({ message: 'User created successfully' });
             });
     } catch (error) {
-        console.error('Signup error:', error);
+        console.error('Signup error:', error.message);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
 // Login route
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-    if (!username || !password)
+    if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required.' });
+    }
 
     db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
         if (err) {
-            console.error('Login DB error:', err);
+            console.error('Login DB error:', err.message);
             return res.status(500).json({ error: 'Database error' });
         }
         if (!user) return res.status(401).json({ error: 'Invalid credentials' });
@@ -214,21 +249,12 @@ app.post('/api/login', (req, res) => {
         if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
         const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token });
+        res.json({ token, username });
     });
 });
 
 // Create post
-app.post('/api/posts', authenticateToken, (req, res, next) => {
-    upload.single('photo')(req, res, (err) => {
-        if (err instanceof multer.MulterError) {
-            return res.status(400).json({ error: 'File upload error: ' + err.message });
-        } else if (err) {
-            return res.status(400).json({ error: err.message });
-        }
-        next();
-    });
-}, (req, res) => {
+app.post('/api/posts', authenticateToken, upload.single('photo'), (req, res) => {
     const content = req.body.content || '';
     const type = req.file ? 'photo' : 'text';
     const postContent = req.file ? `/uploads/${req.file.filename}` : content;
@@ -236,25 +262,30 @@ app.post('/api/posts', authenticateToken, (req, res, next) => {
 
     if (!postContent) return res.status(400).json({ error: 'Post content is required.' });
 
-    db.run('INSERT INTO posts (userId, type, content) VALUES (?, ?, ?)',
-        [userId, type, postContent],
+    db.run('INSERT INTO posts (userId, type, content, createdAt) VALUES (?, ?, ?, ?)',
+        [userId, type, postContent, new Date().toISOString()],
         function (err) {
             if (err) {
-                console.error('Post creation error:', err);
+                console.error('Post creation error:', err.message);
                 return res.status(500).json({ error: 'Failed to create post' });
             }
-            res.status(201).json({ message: 'Post created successfully' });
+            res.status(201).json({ message: 'Post created successfully', id: this.lastID });
         });
 });
 
 // Get user's own posts
 app.get('/api/posts', authenticateToken, (req, res) => {
     const userId = req.user.userId;
-    db.all('SELECT * FROM posts WHERE userId = ? ORDER BY createdAt DESC',
+    db.all(`
+        SELECT p.id, p.userId, p.type, p.content, p.createdAt, u.username 
+        FROM posts p 
+        JOIN users u ON p.userId = u.id 
+        WHERE p.userId = ? 
+        ORDER BY p.createdAt DESC`,
         [userId],
         (err, posts) => {
             if (err) {
-                console.error('Fetch user posts error:', err);
+                console.error('Fetch user posts error:', err.message);
                 return res.status(500).json({ error: 'Failed to fetch posts' });
             }
             res.json(posts);
@@ -263,13 +294,19 @@ app.get('/api/posts', authenticateToken, (req, res) => {
 
 // Get all posts
 app.get('/api/all-posts', (req, res) => {
-    db.all('SELECT posts.*, users.username FROM posts JOIN users ON posts.userId = users.id ORDER BY posts.createdAt DESC', [], (err, posts) => {
-        if (err) {
-            console.error('Fetch all posts error:', err);
-            return res.status(500).json({ error: 'Failed to fetch posts' });
-        }
-        res.json(posts);
-    });
+    db.all(`
+        SELECT p.id, p.userId, p.type, p.content, p.createdAt, u.username 
+        FROM posts p 
+        JOIN users u ON p.userId = u.id 
+        ORDER BY p.createdAt DESC`,
+        [],
+        (err, posts) => {
+            if (err) {
+                console.error('Fetch all posts error:', err.message);
+                return res.status(500).json({ error: 'Failed to fetch posts' });
+            }
+            res.json(posts);
+        });
 });
 
 // Create comment
@@ -281,15 +318,23 @@ app.post('/api/comments', authenticateToken, (req, res) => {
         return res.status(400).json({ error: 'Post ID and comment content are required.' });
     }
 
-    db.run('INSERT INTO comments (postId, userId, content) VALUES (?, ?, ?)',
-        [postId, userId, content],
-        function (err) {
-            if (err) {
-                console.error('Comment creation error:', err);
-                return res.status(500).json({ error: 'Failed to create comment' });
-            }
-            res.status(201).json({ message: 'Comment created successfully' });
-        });
+    db.get('SELECT id FROM posts WHERE id = ?', [postId], (err, post) => {
+        if (err) {
+            console.error('Fetch post error:', err.message);
+            return res.status(500).json({ error: 'Failed to validate post' });
+        }
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        db.run('INSERT INTO comments (postId, userId, content, createdAt) VALUES (?, ?, ?, ?)',
+            [postId, userId, content, new Date().toISOString()],
+            function (err) {
+                if (err) {
+                    console.error('Comment creation error:', err.message);
+                    return res.status(500).json({ error: 'Failed to create comment' });
+                }
+                res.status(201).json({ message: 'Comment created successfully', id: this.lastID });
+            });
+    });
 });
 
 // Get comments for a post
@@ -304,7 +349,7 @@ app.get('/api/posts/:id/comments', (req, res) => {
         [postId],
         (err, comments) => {
             if (err) {
-                console.error('Fetch comments error:', err);
+                console.error('Fetch comments error:', err.message);
                 return res.status(500).json({ error: 'Failed to fetch comments' });
             }
             res.json(comments);
@@ -315,16 +360,16 @@ app.get('/api/posts/:id/comments', (req, res) => {
 app.delete('/api/comments/:id', authenticateToken, restrictToAdmin, (req, res) => {
     const commentId = req.params.id;
 
-    db.get('SELECT * FROM comments WHERE id = ?', [commentId], (err, comment) => {
+    db.get('SELECT id FROM comments WHERE id = ?', [commentId], (err, comment) => {
         if (err) {
-            console.error('Fetch comment error:', err);
-            return res.status(500).json({ error: `Failed to fetch comment: ${err.message}` });
+            console.error('Fetch comment error:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch comment' });
         }
         if (!comment) return res.status(404).json({ error: 'Comment not found' });
 
         db.run('DELETE FROM comments WHERE id = ?', [commentId], function (err) {
             if (err) {
-                console.error('Delete comment error:', err);
+                console.error('Delete comment error:', err.message);
                 return res.status(500).json({ error: 'Failed to delete comment' });
             }
             res.json({ message: 'Comment deleted successfully' });
@@ -338,25 +383,28 @@ app.delete('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res) => {
 
     db.get('SELECT * FROM posts WHERE id = ?', [postId], (err, post) => {
         if (err) {
-            console.error('Fetch post error:', err);
+            console.error('Fetch post error:', err.message);
             return res.status(500).json({ error: 'Failed to fetch post' });
         }
         if (!post) return res.status(404).json({ error: 'Post not found' });
 
-        // Delete associated comments
         db.run('DELETE FROM comments WHERE postId = ?', [postId], (err) => {
-            if (err) console.error('Delete comments error:', err);
+            if (err) {
+                console.error('Delete comments error:', err.message);
+            }
         });
 
         db.run('DELETE FROM posts WHERE id = ?', [postId], function (err) {
             if (err) {
-                console.error('Delete post error:', err);
+                console.error('Delete post error:', err.message);
                 return res.status(500).json({ error: 'Failed to delete post' });
             }
             if (post.type === 'photo') {
                 const filePath = path.join(__dirname, 'public', post.content);
                 fs.unlink(filePath, (err) => {
-                    if (err) console.error('Failed to delete photo file:', err);
+                    if (err && err.code !== 'ENOENT') {
+                        console.error('Failed to delete photo file:', err.message);
+                    }
                 });
             }
             res.json({ message: 'Post deleted successfully' });
@@ -365,27 +413,18 @@ app.delete('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res) => {
 });
 
 // Update post (admin only)
-app.put('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res, next) => {
-    upload.single('photo')(req, res, (err) => {
-        if (err instanceof multer.MulterError) {
-            return res.status(400).json({ error: 'File upload error: ' + err.message });
-        } else if (err) {
-            return res.status(400).json({ error: err.message });
-        }
-        next();
-    });
-}, (req, res) => {
+app.put('/api/posts/:id', authenticateToken, restrictToAdmin, upload.single('photo'), (req, res) => {
     const postId = req.params.id;
     const content = req.body.content || '';
     const photo = req.file;
-    let type = content && !photo ? 'text' : photo ? 'photo' : null;
-    let postContent = photo ? `/uploads/${photo.filename}` : content;
+    const type = content && !photo ? 'text' : photo ? 'photo' : null;
+    const postContent = photo ? `/uploads/${photo.filename}` : content;
 
     if (!type) return res.status(400).json({ error: 'No content or photo provided' });
 
     db.get('SELECT * FROM posts WHERE id = ?', [postId], (err, post) => {
         if (err) {
-            console.error('Fetch post error:', err);
+            console.error('Fetch post error:', err.message);
             return res.status(500).json({ error: 'Failed to fetch post' });
         }
         if (!post) return res.status(404).json({ error: 'Post not found' });
@@ -393,15 +432,17 @@ app.put('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res, next) =
         if (post.type === 'photo' && photo) {
             const oldFilePath = path.join(__dirname, 'public', post.content);
             fs.unlink(oldFilePath, (err) => {
-                if (err) console.error('Failed to delete old photo file:', err);
+                if (err && err.code !== 'ENOENT') {
+                    console.error('Failed to delete old photo file:', err.message);
+                }
             });
         }
 
-        db.run('UPDATE posts SET type = ?, content = ? WHERE id = ?',
-            [type, postContent, postId],
+        db.run('UPDATE posts SET type = ?, content = ?, createdAt = ? WHERE id = ?',
+            [type, postContent, new Date().toISOString(), postId],
             function (err) {
                 if (err) {
-                    console.error('Update post error:', err);
+                    console.error('Update post error:', err.message);
                     return res.status(500).json({ error: 'Failed to update post' });
                 }
                 res.json({ message: 'Post updated successfully' });
@@ -410,20 +451,14 @@ app.put('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res, next) =
 });
 
 // Serve HTML pages
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'home.html'));
-});
-app.get('/signup', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'signup.html'));
-});
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'login.html'));
-});
-app.get('/user', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'user.html'));
-});
-app.get('/profile', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'html', 'profile.html'));
+app.get(['/', '/signup', '/login', '/user', '/profile', '/all-posts'], (req, res) => {
+    const fileName = req.path === '/' ? 'home.html' : `${req.path.slice(1)}.html`;
+    res.sendFile(path.join(__dirname, 'public', fileName), (err) => {
+        if (err) {
+            console.error(`Error serving ${fileName}:`, err.message);
+            res.status(404).json({ error: 'Page not found' });
+        }
+    });
 });
 
 // Start server

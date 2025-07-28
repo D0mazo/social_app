@@ -38,7 +38,7 @@ async function checkAuth() {
             return null;
         }
         if (!res.ok) throw new Error('Failed to validate token');
-        return await res.json(); // Return user data for use in other scripts
+        return await res.json(); // Return user data
     } catch (err) {
         console.error('Check auth error:', err);
         localStorage.removeItem('token');

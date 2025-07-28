@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - Social App</title>
-   <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/typography.css">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
     <nav class="navbar">
@@ -12,19 +13,23 @@
         <div class="nav-buttons">
             <a href="/signup" class="nav-button">Sign Up</a>
             <a href="/login" class="nav-button">Login</a>
-            <a href="/user" class="nav-button">User</a>
+            <a href="/user" class="nav-button">Dashboard</a>
             <a href="/profile" class="nav-button">Profile</a>
-            <button id="logout-button" class="nav-button logout">Log Out</button>
+            <button id="logout-button" class="nav-button logout" style="display: none;">Log Out</button>
         </div>
     </nav>
     <div class="user-info">
-            <span id="logged-in-user"></span>
-        </div>
+        <span id="logged-in-user"></span>
+    </div>
     <div class="container">
         <h2>All Posts</h2>
-        <p class="prompt-message">Sign up or log in to create your own posts!</p>
+        <p class="prompt-message" style="display: none;">Sign up or log in to create your own posts!</p>
         <div id="all-posts"></div>
     </div>
     <script type="module" src="main.js"></script>
-    </body>
+    <script type="module">
+        import { setupLogout } from '/JavaScript/auth.js';
+        setupLogout();
+    </script>
+</body>
 </html>

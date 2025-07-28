@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Social App</title>
+    <title>Profile - Social App</title>
+    <link rel="stylesheet" href="/css/typography.css">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -12,7 +13,8 @@
         <div class="nav-buttons">
             <a href="/" class="nav-button">Home</a>
             <a href="/user" class="nav-button">Dashboard</a>
-            <button id="logout-button" class="nav-button logout">Log Out</button>
+            <a href="/all-posts" class="nav-button">All Posts</a>
+            <button id="logout-button" class="nav-button logout" style="display: none;">Log Out</button>
         </div>
     </nav>
     <div class="user-info">
@@ -20,17 +22,24 @@
     </div>
     <div class="profile-container">
         <img class="profile-pic" id="profilePic" src="https://via.placeholder.com/150" alt="Profile Picture">
-        <input type="file" id="profilePhoto" accept="image/jpeg,image/png" style="margin: 10px auto; display: block;">
-        <button class="upload-btn" onclick="uploadProfilePhoto()">Upload Photo</button>
+        <form id="edit-profile-form">
+            <input type="text" id="profileUsername" placeholder="Username" required>
+            <input type="email" id="profileEmail" placeholder="Email" required>
+            <textarea id="profileBio" placeholder="Bio"></textarea>
+            <input type="text" id="profileLocation" placeholder="Location">
+            <button type="submit">Update Profile</button>
+        </form>
+        <input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/gif" style="margin: 10px auto; display: block;">
+        <button id="upload-photo-btn">Upload Photo</button>
+        <div id="profileMessage" class="message"></div>
         <div class="profile-info">
             <h2 id="userNameS">Loading...</h2>
             <p id="userEmailS">Loading...</p>
             <p id="userBioS">Loading...</p>
             <p id="userLocationS">Loading...</p>
         </div>
-        <div id="profileMessage"></div>
-        <button class="edit-btn" onclick="editProfile()">Edit Profile</button>
     </div>
+    <script type="module" src="main.js"></script>
     <script type="module" src="/JavaScript/profile.js"></script>
 </body>
 </html>

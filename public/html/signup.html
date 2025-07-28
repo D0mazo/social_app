@@ -4,23 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - Social App</title>
+    <link rel="stylesheet" href="/css/typography.css">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <!-- Navigation bar with app title and links -->
     <nav class="navbar">
         <h1>Social App</h1>
         <div class="nav-buttons">
             <a href="/" class="nav-button">Home</a>
             <a href="/login" class="nav-button">Login</a>
+            <a href="/user" class="nav-button">Dashboard</a>
+            <a href="/profile" class="nav-button">Profile</a>
         </div>
     </nav>
-    <!-- Main content area for sign-up -->
     <div class="container">
         <h2>Sign Up</h2>
-        <!-- Message display for sign-up success or errors -->
         <div id="signup-message" class="message"></div>
-        <!-- Sign-up form -->
         <form id="signup-form">
             <input type="text" id="signup-username" placeholder="Username" required>
             <input type="email" id="signup-email" placeholder="Email" required>

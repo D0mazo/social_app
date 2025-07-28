@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Social App</title>
+    <title>All Posts - Social App</title>
     <link rel="stylesheet" href="/css/typography.css">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
@@ -12,7 +12,9 @@
         <h1>Social App</h1>
         <div class="nav-buttons">
             <a href="/" class="nav-button">Home</a>
-            <a href="/all-posts" class="nav-button">All Posts</a>
+            <a href="/signup" class="nav-button">Sign Up</a>
+            <a href="/login" class="nav-button">Login</a>
+            <a href="/user" class="nav-button">Dashboard</a>
             <a href="/profile" class="nav-button">Profile</a>
             <button id="logout-button" class="nav-button logout" style="display: none;">Log Out</button>
         </div>
@@ -21,17 +23,11 @@
         <span id="logged-in-user"></span>
     </div>
     <div class="container">
-        <h2>Create Post</h2>
-        <div id="post-message" class="message"></div>
-        <form id="post-form" enctype="multipart/form-data">
-            <textarea id="post-content" placeholder="What's on your mind?" rows="4"></textarea>
-            <input type="file" id="post-photo" accept="image/jpeg,image/png,image/gif">
-            <button type="submit">Post</button>
-        </form>
-        <h2>Your Posts</h2>
-        <div id="posts"></div>
+        <h2>All Posts</h2>
+        <p class="prompt-message" style="display: none;">Sign up or log in to create your own posts!</p>
+        <div id="all-posts"></div>
     </div>
-    <script type="module" src="main.js"></script>
+    <script type="module" src="/JavaScript/main.js"></script>
     <script type="module">
         import { setupLogout } from '/JavaScript/auth.js';
         setupLogout();

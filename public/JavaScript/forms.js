@@ -1,16 +1,16 @@
 import { fetchPosts } from '/JavaScript/posts.js';
 
-// Base URL for API calls (configurable for subdirectories)
+// Base URL for API calls
 const BASE_URL = process.env.BASE_URL || '';
 const API_URL = `${BASE_URL}/api`;
 
 // Utility to validate email format
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-// Utility to validate password strength (e.g., min 8 chars, 1 letter, 1 number)
+// Utility to validate password strength
 const isValidPassword = (password) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
 
-// Utility to validate username (e.g., alphanumeric, 3-20 chars)
+// Utility to validate username
 const isValidUsername = (username) => /^[A-Za-z0-9]{3,20}$/.test(username);
 
 function setupSignupForm() {

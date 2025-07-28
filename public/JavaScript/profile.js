@@ -1,6 +1,6 @@
 import { checkAuth, setupLogout } from '/JavaScript/auth.js';
 
-// Base URL for API calls (configurable for subdirectories)
+// Base URL for API calls
 const BASE_URL = process.env.BASE_URL || '';
 const API_URL = `${BASE_URL}/api`;
 
@@ -8,10 +8,10 @@ const API_URL = `${BASE_URL}/api`;
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize authentication and logout
     let user;
     try {
-        user = await checkAuth(); // Assume checkAuth returns user data or throws
+        user = await checkAuth();
+        if (!user) return; // Redirect handled by checkAuth
         setupLogout();
     } catch (error) {
         console.error('Authentication error:', error);
@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Display logged-in user's name
     const userDisplay = document.getElementById('logged-in-user');
     if (userDisplay) {
         userDisplay.textContent = `Logged in as: ${user.username || 'Guest'}`;
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.warn('Element #logged-in-user not found');
     }
 
-    // Fetch and display user profile
     try {
         const res = await fetch(`${API_URL}/user`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
@@ -110,7 +108,6 @@ async function editProfile() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to update profile');
 
-        // Update DOM with new profile data
         const fields = [
             { id: 'userNameS', value: username, fallback: 'No username' },
             { id: 'userEmailS', value: email, fallback: 'No email' },
@@ -123,7 +120,7 @@ async function editProfile() {
                 element.textContent = value || fallback;
             }
         });
-        localStorage.setItem('username', username); // Update stored username
+        localStorage.setItem('username', username);
         const userDisplay = document.getElementById('logged-in-user');
         if (userDisplay) {
             userDisplay.textContent = `Logged in as: ${username}`;
@@ -167,7 +164,6 @@ async function uploadProfilePhoto() {
         return;
     }
 
-    // Validate file type and size (matches server: JPEG, PNG, GIF; 5MB)
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (!allowedTypes.includes(photo.type)) {
