@@ -12,7 +12,12 @@ const { initDatabase } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    console.error('JWT_SECRET is not defined in environment variables');
+    process.exit(1);
+}
 
 // Create uploads directory if not exists
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
@@ -20,8 +25,12 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 // Middleware
 app.use(helmet());
+const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',')
+    : ['http://localhost:3000'];
+
 app.use(cors({
-    origin: ['http://localhost:3000'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -38,7 +47,18 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage });
+
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(new Error('Only JPEG, PNG, and GIF files are allowed'));
+        }
+        cb(null, true);
+    }
+});
 
 // SQLite database setup
 const db = new sqlite3.Database('./database.db', (err) => {
@@ -110,7 +130,16 @@ app.put('/api/user', authenticateToken, (req, res) => {
 });
 
 // Upload profile photo
-app.post('/api/user/photo', authenticateToken, upload.single('photo'), (req, res) => {
+app.post('/api/user/photo', authenticateToken, (req, res, next) => {
+    upload.single('photo')(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({ error: 'File upload error: ' + err.message });
+        } else if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        next();
+    });
+}, (req, res) => {
     const userId = req.user.userId;
     const profilePic = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -190,7 +219,16 @@ app.post('/api/login', (req, res) => {
 });
 
 // Create post
-app.post('/api/posts', authenticateToken, upload.single('photo'), (req, res) => {
+app.post('/api/posts', authenticateToken, (req, res, next) => {
+    upload.single('photo')(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({ error: 'File upload error: ' + err.message });
+        } else if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        next();
+    });
+}, (req, res) => {
     const content = req.body.content || '';
     const type = req.file ? 'photo' : 'text';
     const postContent = req.file ? `/uploads/${req.file.filename}` : content;
@@ -327,7 +365,16 @@ app.delete('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res) => {
 });
 
 // Update post (admin only)
-app.put('/api/posts/:id', authenticateToken, restrictToAdmin, upload.single('photo'), (req, res) => {
+app.put('/api/posts/:id', authenticateToken, restrictToAdmin, (req, res, next) => {
+    upload.single('photo')(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({ error: 'File upload error: ' + err.message });
+        } else if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        next();
+    });
+}, (req, res) => {
     const postId = req.params.id;
     const content = req.body.content || '';
     const photo = req.file;

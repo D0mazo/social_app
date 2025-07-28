@@ -3,31 +3,53 @@ import { setupSignupForm, setupLoginForm, setupPostForm } from '/JavaScript/form
 import { fetchPosts, fetchAllPosts } from '/JavaScript/posts.js';
 import { editProfile, uploadProfilePhoto } from '/JavaScript/profile.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Display logged-in user's name
-    const username = localStorage.getItem('username') || 'Guest';
-    const userDisplay = document.getElementById('logged-in-user');
-    if (userDisplay) {
-        userDisplay.textContent = `Logged in as: ${username}`;
+document.addEventListener('DOMContentLoaded', async () => {
+    // Normalize pathname to handle trailing slashes and query parameters
+    const normalizePath = (path) => path.split('?')[0].replace(/\/+$/, '');
+    const pathname = normalizePath(window.location.pathname);
+
+    // Initialize authentication and display username for authenticated pages
+    const authenticatedPages = ['/user', '/profile'];
+    if (authenticatedPages.includes(pathname)) {
+        try {
+            const user = await checkAuth(); // Assume checkAuth returns user data or throws
+            const username = user?.username || 'Guest';
+            const userDisplay = document.getElementById('logged-in-user');
+            if (userDisplay) {
+                userDisplay.textContent = `Logged in as: ${username}`;
+            }
+            setupLogout();
+        } catch (error) {
+            console.error('Authentication error:', error);
+            const userDisplay = document.getElementById('logged-in-user');
+            if (userDisplay) {
+                userDisplay.textContent = 'Logged in as: Guest';
+            }
+        }
     }
 
-    // Initialize authentication and logout for all pages
-    checkAuth();
-    setupLogout();
-
     // Initialize page-specific functionality
-    const pathname = window.location.pathname;
-
-    if (pathname === '/signup') {
-        setupSignupForm();
-    } else if (pathname === '/login') {
-        setupLoginForm();
-    } else if (pathname === '/user') {
-        setupPostForm(fetchPosts);
-        if (document.getElementById('post-form')) fetchPosts();
-        if (document.getElementById('all-posts')) fetchAllPosts();
-    } else if (pathname === '/profile') {
-        // Profile page initialization is handled in profile.js
-        // Functions editProfile and uploadProfilePhoto are already bound in profile.html
+    try {
+        if (pathname === '/signup') {
+            setupSignupForm();
+        } else if (pathname === '/login') {
+            setupLoginForm();
+        } else if (pathname === '/user') {
+            setupPostForm(fetchPosts);
+            if (document.getElementById('post-form')) {
+                fetchPosts().catch((error) => console.error('Error fetching posts:', error));
+            }
+            if (document.getElementById('all-posts')) {
+                fetchAllPosts().catch((error) => console.error('Error fetching all posts:', error));
+            }
+        } else if (pathname === '/profile') {
+            // Explicitly initialize profile functionality
+            editProfile();
+            uploadProfilePhoto();
+        } else {
+            console.warn(`No specific initialization for path: ${pathname}`);
+        }
+    } catch (error) {
+        console.error('Page initialization error:', error);
     }
 });

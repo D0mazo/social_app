@@ -1,86 +1,144 @@
 import { checkAuth, setupLogout } from '/JavaScript/auth.js';
 
+// Base URL for API calls (configurable for subdirectories)
+const BASE_URL = process.env.BASE_URL || '';
+const API_URL = `${BASE_URL}/api`;
+
+// Utility to validate email format
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize authentication and logout
-    checkAuth();
-    setupLogout();
+    let user;
+    try {
+        user = await checkAuth(); // Assume checkAuth returns user data or throws
+        setupLogout();
+    } catch (error) {
+        console.error('Authentication error:', error);
+        window.location.href = `${BASE_URL}/login`;
+        return;
+    }
 
     // Display logged-in user's name
-    const username = localStorage.getItem('username') || 'Guest';
     const userDisplay = document.getElementById('logged-in-user');
     if (userDisplay) {
-        userDisplay.textContent = `Logged in as: ${username}`;
+        userDisplay.textContent = `Logged in as: ${user.username || 'Guest'}`;
+    } else {
+        console.warn('Element #logged-in-user not found');
     }
 
     // Fetch and display user profile
     try {
-        const res = await fetch('/api/user', {
+        const res = await fetch(`${API_URL}/user`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         });
         const data = await res.json();
         if (res.ok) {
-            document.getElementById('userNameS').textContent = data.username;
-            document.getElementById('userEmailS').textContent = data.email;
-            document.getElementById('userBioS').textContent = data.bio || 'No bio provided';
-            document.getElementById('userLocationS').textContent = data.location || 'No location provided';
-            if (data.profilePic) {
-                document.getElementById('profilePic').src = data.profilePic;
+            const fields = [
+                { id: 'userNameS', value: data.username, fallback: 'No username' },
+                { id: 'userEmailS', value: data.email, fallback: 'No email' },
+                { id: 'userBioS', value: data.bio, fallback: 'No bio provided' },
+                { id: 'userLocationS', value: data.location, fallback: 'No location provided' },
+            ];
+            fields.forEach(({ id, value, fallback }) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value || fallback;
+                } else {
+                    console.warn(`Element #${id} not found`);
+                }
+            });
+            const profilePic = document.getElementById('profilePic');
+            if (data.profilePic && profilePic) {
+                profilePic.src = data.profilePic;
+            } else if (!profilePic) {
+                console.warn('Element #profilePic not found');
             }
         } else {
-            window.location.href = '/login';
+            window.location.href = `${BASE_URL}/login`;
         }
     } catch (err) {
         console.error('Fetch user error:', err);
-        window.location.href = '/login';
+        window.location.href = `${BASE_URL}/login`;
     }
 });
 
-function editProfile() {
-    const name = prompt("Enter new name:", document.getElementById("userNameS").textContent);
-    const email = prompt("Enter new email:", document.getElementById("userEmailS").textContent);
-    const bio = prompt("Enter new bio:", document.getElementById("userBioS").textContent.replace('No bio provided', ''));
-    const location = prompt("Enter new location:", document.getElementById("userLocationS").textContent.replace('No location provided', ''));
+async function editProfile() {
+    const form = document.getElementById('edit-profile-form');
     const msg = document.getElementById('profileMessage');
+    if (!form || !msg) {
+        console.error('Profile form or message element not found');
+        return;
+    }
 
-    if (name && email) {
-        fetch('/api/user', {
+    const username = form.querySelector('#profileUsername')?.value;
+    const email = form.querySelector('#profileEmail')?.value;
+    const bio = form.querySelector('#profileBio')?.value;
+    const location = form.querySelector('#profileLocation')?.value;
+
+    if (!username || !email) {
+        msg.textContent = 'Username and email are required';
+        msg.classList.remove('success');
+        msg.classList.add('error');
+        setTimeout(() => {
+            msg.textContent = '';
+            msg.classList.remove('error');
+        }, 3000);
+        return;
+    }
+
+    if (!isValidEmail(email)) {
+        msg.textContent = 'Invalid email format';
+        msg.classList.remove('success');
+        msg.classList.add('error');
+        setTimeout(() => {
+            msg.textContent = '';
+            msg.classList.remove('error');
+        }, 3000);
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/user`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
             },
-            body: JSON.stringify({ username: name, email, bio, location }),
-        })
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to update profile');
-                return res.json();
-            })
-            .then(data => {
-                document.getElementById('userNameS').textContent = name;
-                document.getElementById('userEmailS').textContent = email;
-                document.getElementById('userBioS').textContent = bio || 'No bio provided';
-                document.getElementById('userLocationS').textContent = location || 'No location provided';
-                localStorage.setItem('username', name); // Update stored username
-                const userDisplay = document.getElementById('logged-in-user');
-                if (userDisplay) userDisplay.textContent = `Logged in as: ${name}`;
-                msg.textContent = data.message;
-                msg.classList.add('success');
-                setTimeout(() => {
-                    msg.textContent = '';
-                    msg.classList.remove('error', 'success');
-                }, 3000);
-            })
-            .catch(err => {
-                console.error('Update profile error:', err);
-                msg.textContent = 'Error: Cannot reach server';
-                msg.classList.add('error');
-                setTimeout(() => {
-                    msg.textContent = '';
-                    msg.classList.remove('error');
-                }, 3000);
-            });
-    } else {
-        msg.textContent = 'Username and email are required';
+            body: JSON.stringify({ username, email, bio, location }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+
+        // Update DOM with new profile data
+        const fields = [
+            { id: 'userNameS', value: username, fallback: 'No username' },
+            { id: 'userEmailS', value: email, fallback: 'No email' },
+            { id: 'userBioS', value: bio, fallback: 'No bio provided' },
+            { id: 'userLocationS', value: location, fallback: 'No location provided' },
+        ];
+        fields.forEach(({ id, value, fallback }) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value || fallback;
+            }
+        });
+        localStorage.setItem('username', username); // Update stored username
+        const userDisplay = document.getElementById('logged-in-user');
+        if (userDisplay) {
+            userDisplay.textContent = `Logged in as: ${username}`;
+        }
+        msg.textContent = data.message || 'Profile updated successfully';
+        msg.classList.remove('error');
+        msg.classList.add('success');
+        setTimeout(() => {
+            msg.textContent = '';
+            msg.classList.remove('success');
+        }, 3000);
+    } catch (err) {
+        console.error('Update profile error:', err);
+        msg.textContent = err.message || 'Error: Cannot reach server';
+        msg.classList.remove('success');
         msg.classList.add('error');
         setTimeout(() => {
             msg.textContent = '';
@@ -89,11 +147,42 @@ function editProfile() {
     }
 }
 
-function uploadProfilePhoto() {
-    const photo = document.getElementById('profilePhoto').files[0];
+async function uploadProfilePhoto() {
+    const profilePhotoInput = document.getElementById('profilePhoto');
     const msg = document.getElementById('profileMessage');
+    if (!profilePhotoInput || !msg) {
+        console.error('Profile photo input or message element not found');
+        return;
+    }
+
+    const photo = profilePhotoInput.files[0];
     if (!photo) {
         msg.textContent = 'Please select an image';
+        msg.classList.remove('success');
+        msg.classList.add('error');
+        setTimeout(() => {
+            msg.textContent = '';
+            msg.classList.remove('error');
+        }, 3000);
+        return;
+    }
+
+    // Validate file type and size (matches server: JPEG, PNG, GIF; 5MB)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (!allowedTypes.includes(photo.type)) {
+        msg.textContent = 'Only JPEG, PNG, or GIF files are allowed';
+        msg.classList.remove('success');
+        msg.classList.add('error');
+        setTimeout(() => {
+            msg.textContent = '';
+            msg.classList.remove('error');
+        }, 3000);
+        return;
+    }
+    if (photo.size > maxSize) {
+        msg.textContent = 'File size exceeds 5MB limit';
+        msg.classList.remove('success');
         msg.classList.add('error');
         setTimeout(() => {
             msg.textContent = '';
@@ -105,33 +194,38 @@ function uploadProfilePhoto() {
     const formData = new FormData();
     formData.append('photo', photo);
 
-    fetch('/api/user/photo', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: formData,
-    })
-        .then(res => {
-            if (!res.ok) throw new Error('Failed to upload photo');
-            return res.json();
-        })
-        .then(data => {
-            document.getElementById('profilePic').src = data.profilePic;
-            msg.textContent = data.message;
-            msg.classList.add('success');
-            setTimeout(() => {
-                msg.textContent = '';
-                msg.classList.remove('error', 'success');
-            }, 3000);
-        })
-        .catch(err => {
-            console.error('Upload photo error:', err);
-            msg.textContent = 'Error: Cannot reach server';
-            msg.classList.add('error');
-            setTimeout(() => {
-                msg.textContent = '';
-                msg.classList.remove('error');
-            }, 3000);
+    try {
+        const res = await fetch(`${API_URL}/user/photo`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            body: formData,
         });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to upload photo');
+
+        const profilePic = document.getElementById('profilePic');
+        if (profilePic) {
+            profilePic.src = data.profilePic;
+        } else {
+            console.warn('Element #profilePic not found');
+        }
+        msg.textContent = data.message || 'Profile photo uploaded successfully';
+        msg.classList.remove('error');
+        msg.classList.add('success');
+        setTimeout(() => {
+            msg.textContent = '';
+            msg.classList.remove('success');
+        }, 3000);
+    } catch (err) {
+        console.error('Upload photo error:', err);
+        msg.textContent = err.message || 'Error: Cannot reach server';
+        msg.classList.remove('success');
+        msg.classList.add('error');
+        setTimeout(() => {
+            msg.textContent = '';
+            msg.classList.remove('error');
+        }, 3000);
+    }
 }
 
 export { editProfile, uploadProfilePhoto };
