@@ -1,0 +1,81 @@
+/* Styles for the navigation bar and buttons */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #2E4A47 0%, #3B5E57 100%);
+    padding: 20px 30px;
+    border-radius: 15px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    margin-bottom: 40px;
+    margin-top: 20px;
+    position: sticky;
+    top: 20px;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-button {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #F4D03F, #D4A017);
+    color: #1A3C34;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+}
+
+.nav-button:hover::before {
+    left: 100%;
+}
+
+.nav-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(244, 208, 63, 0.4);
+    text-decoration: none;
+}
+
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1A3C34;
+    background: linear-gradient(135deg, #27AE60, #219653);
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    z-index: 900;
+    max-width: 200px;
+    box-sizing: border-box;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-info:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
+}
