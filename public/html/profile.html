@@ -3,10 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
+    <title>User Profile - Social App</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+    <nav class="navbar">
+        <h1>Social App</h1>
+        <div class="nav-buttons">
+            <a href="/" class="nav-button">Home</a>
+            <a href="/user" class="nav-button">Dashboard</a>
+            <button id="logout-button" class="nav-button logout">Log Out</button>
+        </div>
+    </nav>
+    <div class="user-info">
+        <span id="logged-in-user"></span>
+    </div>
     <div class="profile-container">
         <img class="profile-pic" id="profilePic" src="https://via.placeholder.com/150" alt="Profile Picture">
         <input type="file" id="profilePhoto" accept="image/jpeg,image/png" style="margin: 10px auto; display: block;">
@@ -20,130 +31,6 @@
         <div id="profileMessage"></div>
         <button class="edit-btn" onclick="editProfile()">Edit Profile</button>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const res = await fetch('/api/user', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    document.getElementById('userNameS').textContent = data.username;
-                    document.getElementById('userEmailS').textContent = data.email;
-                    document.getElementById('userBioS').textContent = data.bio || 'No bio provided';
-                    document.getElementById('userLocationS').textContent = data.location || 'No location provided';
-                    if (data.profilePic) {
-                        document.getElementById('profilePic').src = data.profilePic;
-                    }
-                } else {
-                    window.location.href = '/login';
-                }
-            } catch (err) {
-                console.error('Fetch user error:', err);
-                window.location.href = '/login';
-            }
-        });
-
-        function editProfile() {
-            const name = prompt("Enter new name:", document.getElementById("userNameS").textContent);
-            const email = prompt("Enter new email:", document.getElementById("userEmailS").textContent);
-            const bio = prompt("Enter new bio:", document.getElementById("userBioS").textContent);
-            const location = prompt("Enter new location:", document.getElementById("userLocationS").textContent);
-            const msg = document.getElementById('profileMessage');
-
-            if (name && email) {
-                fetch('/api/user', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    },
-                    body: JSON.stringify({ username: name, email, bio, location }),
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (res.ok) {
-                            document.getElementById('userNameS').textContent = name;
-                            document.getElementById('userEmailS').textContent = email;
-                            document.getElementById('userBioS').textContent = bio || 'No bio provided';
-                            document.getElementById('userLocationS').textContent = location || 'No location provided';
-                            msg.textContent = data.message;
-                            msg.classList.add('success');
-                        } else {
-                            msg.textContent = data.error || 'Failed to update profile';
-                            msg.classList.add('error');
-                        }
-                        setTimeout(() => {
-                            msg.textContent = '';
-                            msg.classList.remove('error', 'success');
-                        }, 3000);
-                    })
-                    .catch(err => {
-                        console.error('Update profile error:', err);
-                        msg.textContent = 'Error: Cannot reach server';
-                        msg.classList.add('error');
-                        setTimeout(() => {
-                            msg.textContent = '';
-                            msg.classList.remove('error');
-                        }, 3000);
-                    });
-            } else {
-                msg.textContent = 'Username and email are required';
-                msg.classList.add('error');
-                setTimeout(() => {
-                    msg.textContent = '';
-                    msg.classList.remove('error');
-                }, 3000);
-            }
-        }
-
-        function uploadProfilePhoto() {
-            const photo = document.getElementById('profilePhoto').files[0];
-            const msg = document.getElementById('profileMessage');
-            if (!photo) {
-                msg.textContent = 'Please select an image';
-                msg.classList.add('error');
-                setTimeout(() => {
-                    msg.textContent = '';
-                    msg.classList.remove('error');
-                }, 3000);
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('photo', photo);
-
-            fetch('/api/user/photo', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                body: formData,
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (res.ok) {
-                        document.getElementById('profilePic').src = data.profilePic;
-                        msg.textContent = data.message;
-                        msg.classList.add('success');
-                    } else {
-                        msg.textContent = data.error || 'Failed to upload photo';
-                        msg.classList.add('error');
-                    }
-                    setTimeout(() => {
-                        msg.textContent = '';
-                        msg.classList.remove('error', 'success');
-                    }, 3000);
-                })
-                .catch(err => {
-                    console.error('Upload photo error:', err);
-                    msg.textContent = 'Error: Cannot reach server';
-                    msg.classList.add('error');
-                    setTimeout(() => {
-                        msg.textContent = '';
-                        msg.classList.remove('error');
-                    }, 3000);
-                });
-        }
-    </script>
+    <script type="module" src="/JavaScript/profile.js"></script>
 </body>
 </html>

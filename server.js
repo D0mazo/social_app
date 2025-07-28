@@ -71,6 +71,76 @@ function restrictToAdmin(req, res, next) {
     next();
 }
 
+// Get user profile
+app.get('/api/user', authenticateToken, (req, res) => {
+    const userId = req.user.userId;
+    db.get('SELECT username, email, bio, location, profilePic FROM users WHERE id = ?', [userId], (err, user) => {
+        if (err) {
+            console.error('Fetch user profile error:', err);
+            return res.status(500).json({ error: 'Failed to fetch user profile' });
+        }
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json(user);
+    });
+});
+
+// Update user profile
+app.put('/api/user', authenticateToken, (req, res) => {
+    const { username, email, bio, location } = req.body;
+    const userId = req.user.userId;
+
+    if (!username || !email) {
+        return res.status(400).json({ error: 'Username and email are required.' });
+    }
+
+    db.run(
+        'UPDATE users SET username = ?, email = ?, bio = ?, location = ? WHERE id = ?',
+        [username, email, bio || null, location || null, userId],
+        function (err) {
+            if (err) {
+                if (err.message.includes('UNIQUE')) {
+                    return res.status(400).json({ error: 'Username or email already exists' });
+                }
+                console.error('Update user profile error:', err);
+                return res.status(500).json({ error: 'Failed to update user profile' });
+            }
+            res.json({ message: 'Profile updated successfully' });
+        }
+    );
+});
+
+// Upload profile photo
+app.post('/api/user/photo', authenticateToken, upload.single('photo'), (req, res) => {
+    const userId = req.user.userId;
+    const profilePic = req.file ? `/uploads/${req.file.filename}` : null;
+
+    if (!profilePic) {
+        return res.status(400).json({ error: 'No photo provided' });
+    }
+
+    // Delete old profile photo if exists
+    db.get('SELECT profilePic FROM users WHERE id = ?', [userId], (err, user) => {
+        if (err) {
+            console.error('Fetch user for photo deletion error:', err);
+            return res.status(500).json({ error: 'Failed to fetch user' });
+        }
+        if (user && user.profilePic) {
+            const oldFilePath = path.join(__dirname, 'public', user.profilePic);
+            fs.unlink(oldFilePath, (err) => {
+                if (err) console.error('Failed to delete old profile photo:', err);
+            });
+        }
+
+        db.run('UPDATE users SET profilePic = ? WHERE id = ?', [profilePic, userId], function (err) {
+            if (err) {
+                console.error('Update profile photo error:', err);
+                return res.status(500).json({ error: 'Failed to update profile photo' });
+            }
+            res.json({ message: 'Profile photo uploaded successfully', profilePic });
+        });
+    });
+});
+
 // Signup route
 app.post('/api/signup', async (req, res) => {
     const { username, email, password } = req.body;
@@ -155,7 +225,7 @@ app.get('/api/posts', authenticateToken, (req, res) => {
 
 // Get all posts
 app.get('/api/all-posts', (req, res) => {
-    db.all('SELECT * FROM posts ORDER BY createdAt DESC', [], (err, posts) => {
+    db.all('SELECT posts.*, users.username FROM posts JOIN users ON posts.userId = users.id ORDER BY posts.createdAt DESC', [], (err, posts) => {
         if (err) {
             console.error('Fetch all posts error:', err);
             return res.status(500).json({ error: 'Failed to fetch posts' });
@@ -163,8 +233,6 @@ app.get('/api/all-posts', (req, res) => {
         res.json(posts);
     });
 });
-
-
 
 // Create comment
 app.post('/api/comments', authenticateToken, (req, res) => {
