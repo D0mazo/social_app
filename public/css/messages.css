@@ -1,0 +1,44 @@
+/* Styles for messages, including success and error states */
+.message {
+    background: linear-gradient(135deg, #4A6A63, #3B5E57);
+    padding: 12px 20px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    font-size: 15px;
+    max-width: 75%;
+    margin-left: auto;
+    margin-right: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.message:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.message.success {
+    background: linear-gradient(135deg, #27AE60, #219653);
+    color: #F5F5F5;
+    opacity: 1;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.message.error {
+    background: linear-gradient(135deg, #E74C3C, #C0392B);
+    color: #F5F5F5;
+    opacity: 1;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.prompt-message {
+    color: #B0C4DE;
+    font-style: italic;
+    font-size: 15px;
+    margin-bottom: 25px;
+    text-align: center;
+}

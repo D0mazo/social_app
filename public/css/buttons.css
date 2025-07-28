@@ -1,0 +1,116 @@
+/* Styles for buttons and their variants */
+button {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #F4D03F, #D4A017);
+    color: #1A3C34;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+}
+
+button:hover::before {
+    left: 100%;
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(244, 208, 63, 0.4);
+}
+
+#logout-button {
+    background: linear-gradient(135deg, #E74C3C, #C0392B);
+    color: #F5F5F5;
+}
+
+#logout-button:hover {
+    box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+}
+
+.delete-button {
+    background: linear-gradient(135deg, #E74C3C, #C0392B);
+    color: #F5F5F5;
+    padding: 10px 20px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.delete-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+}
+
+.update-button {
+    background: linear-gradient(135deg, #3498DB, #2980B9);
+    color: #F5F5F5;
+    padding: 10px 20px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.update-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.submit-update {
+    background: linear-gradient(135deg, #27AE60, #219653);
+    color: #F5F5F5;
+    padding: 10px 20px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.submit-update:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
+}
+
+.submit-comment {
+    background: linear-gradient(135deg, #8E44AD, #7B1FA2);
+    color: #F5F5F5;
+    padding: 10px 20px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 500px;
+}
+
+.submit-comment:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(142, 68, 173, 0.4);
+}
+
+.admin-controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}

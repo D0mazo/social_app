@@ -1,0 +1,89 @@
+/* Styles for forms, inputs, and textareas */
+.input-container {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    max-width: 900px;
+    box-sizing: border-box;
+}
+
+input[type="text"], 
+input[type="password"], 
+input[type="email"], 
+textarea {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin: 12px 0;
+    border: none;
+    border-radius: 10px;
+    background: #4A6A63;
+    color: #F5F5F5;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+input:focus, 
+textarea:focus {
+    outline: none;
+    border: 2px solid #F4D03F;
+    box-shadow: 0 0 10px rgba(244, 208, 63, 0.4);
+    background: #5A7A73;
+}
+
+#post-content {
+    min-height: 120px;
+    resize: vertical;
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    border-radius: 12px;
+    padding: 20px;
+    background: linear-gradient(145deg, #4A6A63, #3B5E57);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+#post-content::placeholder {
+    color: #B0C4DE;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+#post-content:focus::placeholder {
+    opacity: 0.5;
+}
+
+.update-form {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 900px;
+    box-sizing: border-box;
+}
+
+.update-content {
+    min-height: 100px;
+    background: #4A6A63;
+    color: #F5F5F5;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 16px;
+    box-sizing: border-box;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.update-photo {
+    padding: 10px;
+    background: #4A6A63;
+    color: #F5F5F5;
+    border: none;
+    border-radius: 10px;
+    box-sizing: border-box;
+}

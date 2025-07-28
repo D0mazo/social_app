@@ -1,0 +1,46 @@
+/* Styles for posts and post images */
+.post {
+    background: linear-gradient(145deg, #3B5E57, #2E4A47);
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 900px;
+    min-height: 200px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.post:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.post-image {
+    max-width: 100%;
+    max-height: 350px;
+    object-fit: contain;
+    border-radius: 10px;
+    margin: 10px auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.post p {
+    margin: 0 0 15px;
+    color: #F5F5F5;
+    flex-grow: 1;
+    text-align: center;
+    font-size: 16px;
+}
+
+.post small {
+    color: #B0C4DE;
+    font-size: 13px;
+    margin-top: 15px;
+    text-align: center;
+}
