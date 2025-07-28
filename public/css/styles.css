@@ -1,0 +1,13 @@
+/* Main stylesheet importing all modular CSS files */
+@import url('fonts.css');
+@import url('global.css');
+@import url('typography.css');
+@import url('navbar.css');
+@import url('containers.css');
+@import url('forms.css');
+@import url('buttons.css');
+@import url('posts.css');
+@import url('messages.css');
+@import url('comments.css');
+@import url('profile.css');
+@import url('responsive.css');
