@@ -164,6 +164,8 @@ app.get('/api/all-posts', (req, res) => {
     });
 });
 
+
+
 // Create comment
 app.post('/api/comments', authenticateToken, (req, res) => {
     const { postId, content } = req.body;
@@ -304,6 +306,9 @@ app.get('/login', (req, res) => {
 });
 app.get('/user', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'html', 'user.html'));
+});
+app.get('/profile', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'html', 'profile.html'));
 });
 
 // Start server
