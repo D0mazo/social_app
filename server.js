@@ -452,15 +452,16 @@ app.put('/api/posts/:id', authenticateToken, restrictToAdmin, upload.single('pho
 
 // Serve HTML pages
 app.get(['/', '/signup', '/login', '/user', '/profile', '/all-posts'], (req, res) => {
-    const fileName = req.path === '/' ? 'home.html' : `${req.path.slice(1)}.html`;
-    res.sendFile(path.join(__dirname, 'public', fileName), (err) => {
+    const page = req.path === '/' ? 'home' : req.path.slice(1); // e.g., 'signup', 'login'
+    const filePath = path.join(__dirname, 'public', 'html', `${page}.html`);
+
+    res.sendFile(filePath, (err) => {
         if (err) {
-            console.error(`Error serving ${fileName}:`, err.message);
+            console.error(`Error serving ${page}.html:`, err.message);
             res.status(404).json({ error: 'Page not found' });
         }
     });
 });
-
 // Start server
 app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);
