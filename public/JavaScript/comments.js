@@ -1,7 +1,7 @@
 import { fetchPosts } from '/JavaScript/posts.js';
 
 // Base URL for API calls
-const BASE_URL = process.env.BASE_URL || '';
+const BASE_URL = 'http://localhost:3000'; // Change this to your real backend URL if needed
 const API_URL = `${BASE_URL}/api`;
 
 // Utility to show notifications
