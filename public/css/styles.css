@@ -1,7 +1,7 @@
 /* Main stylesheet importing all modular CSS files */
 @import url('fonts.css');
 @import url('global.css');
-@import url('typography.css');
+@import url('typogrophy.css');
 @import url('navbar.css');
 @import url('containers.css');
 @import url('forms.css');
