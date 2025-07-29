@@ -3,7 +3,7 @@ import { setupSignupForm, setupLoginForm, setupPostForm } from '/JavaScript/form
 import { fetchPosts, fetchAllPosts } from '/JavaScript/posts.js';
 
 // Base URL for API calls and redirects
-const BASE_URL = process.env.BASE_URL || '';
+const BASE_URL = 'http://localhost:3000'; // Change this to your real backend URL if needed
 
 // Utility to show notifications (consistent with other files)
 function showNotification(message, type = 'error') {
