@@ -25,7 +25,6 @@ function initDatabase(db) {
                     reject(err);
                     return;
                 }
-                console.log('Users table created or already exists');
             });
 
             // Check existing columns in users table for migrations
@@ -51,10 +50,7 @@ function initDatabase(db) {
                                 reject(err);
                                 return;
                             }
-                            console.log(`Added ${column} column to users table`);
                         });
-                    } else {
-                        console.log(`${column} column already exists in users table`);
                     }
                 });
             });
@@ -75,7 +71,6 @@ function initDatabase(db) {
                     reject(err);
                     return;
                 }
-                console.log('Posts table created or already exists');
             });
 
             // Create comments table
@@ -95,7 +90,6 @@ function initDatabase(db) {
                     reject(err);
                     return;
                 }
-                console.log('Comments table created or already exists');
             });
 
             // Create indexes for performance
@@ -112,7 +106,6 @@ function initDatabase(db) {
                         reject(err);
                         return;
                     }
-                    console.log(`Index ${index + 1} created or already exists`);
                 });
             });
 
