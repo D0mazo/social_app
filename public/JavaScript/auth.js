@@ -76,14 +76,31 @@ async function isAdminUser() {
 function setupLogout() {
     const logoutBtn = document.getElementById('logout-button');
     if (!logoutBtn) {
-        console.warn('Element #logout-button not found');
+        console.warn('Element #logout-button not found on page:', window.location.pathname);
         return;
+    }
+
+    const token = localStorage.getItem('token');
+    const userDisplay = document.getElementById('logged-in-user');
+
+    // Show logout button and update user display if authenticated
+    if (token) {
+        logoutBtn.style.display = 'block';
+        if (userDisplay) {
+            const username = localStorage.getItem('username') || 'User';
+            userDisplay.textContent = `Logged in as: ${username}`;
+        }
+    } else {
+        logoutBtn.style.display = 'none';
+        if (userDisplay) {
+            userDisplay.textContent = 'Logged in as: Guest';
+        }
     }
 
     logoutBtn.addEventListener('click', () => {
         localStorage.removeItem('token');
         localStorage.removeItem('username');
-        const userDisplay = document.getElementById('logged-in-user');
+        logoutBtn.style.display = 'none';
         if (userDisplay) {
             userDisplay.textContent = 'Logged in as: Guest';
         }
