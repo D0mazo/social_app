@@ -212,8 +212,7 @@ function setupPostEventListeners(isAdmin, endpoint) {
     // Add click event listeners to all submit-update buttons
     document.querySelectorAll('.submit-update').forEach(btn => {
         btn.addEventListener('click', async () => {
-           targets: // Get the post ID from the button's data attribute
-            const postId = btn.dataset.postId;
+                       const postId = btn.dataset.postId;
             // Get the updated content from the textarea
             const updateContent = btn.parentElement.querySelector('.update-content').value;
             // Get the updated photo file (if any) from the file input
